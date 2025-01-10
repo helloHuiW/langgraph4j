@@ -3,6 +3,7 @@ package org.bsc.langgraph4j;
 import lombok.extern.slf4j.Slf4j;
 
 import org.bsc.langgraph4j.action.AsyncNodeAction;
+import org.bsc.langgraph4j.checkpoint.MemorySaver;
 import org.bsc.langgraph4j.state.AgentState;
 import org.bsc.langgraph4j.state.AppendableValue;
 import org.bsc.langgraph4j.state.AppenderChannel;
@@ -10,6 +11,7 @@ import org.bsc.langgraph4j.state.Channel;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.bsc.langgraph4j.StateGraph.END;
@@ -216,7 +218,16 @@ public class StateGraphTest
         assertIterableEquals( listOf( "message1", "message2", "message3"), result.get().messages().values() );
 
     }
+
+    private static String nextCondition1(MessagesState state) {
+        return "child:step_1";
+    }
+    private static String nextCondition2(MessagesState state) {
+        return "subgraph";
+    }
     public static void main(String[] args) throws Exception {
+
+        CompileConfig compileConfig = CompileConfig.builder().checkpointSaver(new MemorySaver()).build();
         AsyncNodeAction<MessagesState> childStep1 = node_async(state -> Map.of( "messages", "child:step1") );
 
         AsyncNodeAction<MessagesState> childStep2 = node_async(state -> Map.of( "messages", "child:step2") );
@@ -228,11 +239,11 @@ public class StateGraphTest
                 .addNode("child:step_1", childStep1)
                 .addNode("child:step_2", childStep2)
                 .addNode("child:step_3", childStep3)
-                .addEdge(START, "child:step_1")
+                .addConditionalEdges(START, state -> CompletableFuture.completedFuture(nextCondition1(state)), Map.of("child:step_1", "child:step_1"))
                 .addEdge("child:step_1", "child:step_2")
                 .addEdge("child:step_2", "child:step_3")
                 .addEdge("child:step_3", END)
-                .compile();
+                .compile(compileConfig);
         AsyncNodeAction<MessagesState> step1 = node_async(state -> Map.of( "messages", "step1") );
 
         AsyncNodeAction<MessagesState> step2 = node_async(state -> Map.of( "messages", "step2") );
@@ -247,10 +258,10 @@ public class StateGraphTest
                 .addSubgraph( "subgraph", workflowChild )
                 .addEdge(START, "step_1")
                 .addEdge("step_1", "step_2")
-                .addEdge("step_2", "subgraph")
+                .addConditionalEdges("step_2", state -> CompletableFuture.completedFuture(nextCondition2(state)),Map.of("subgraph","subgraph"))
                 .addEdge("subgraph", "step_3")
                 .addEdge("step_3", END)
-                .compile();
+                .compile(compileConfig);
         for( var step : workflowParent.stream( Map.of() )) {
             System.out.println( step );
         }

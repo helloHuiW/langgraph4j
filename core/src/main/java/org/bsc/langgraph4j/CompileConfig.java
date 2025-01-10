@@ -42,7 +42,6 @@ public class CompileConfig {
         }
     }
 
-
     private CompileConfig() {}
 
 }
