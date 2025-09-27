@@ -2,6 +2,42 @@
 
 
 
+<!-- "name: v1.6.5" is a release tag -->
+
+## [v1.6.5](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.6.5) (2025-09-27)
+
+
+
+### Documentation
+
+ -  bump to version 1.6.5 ([91716db33c3138d](https://github.com/bsorrentino/langgraph4j/commit/91716db33c3138db6c4187f61b6e3478e8a6b3bd))
+
+ -  update changelog ([7f10d7eac326938](https://github.com/bsorrentino/langgraph4j/commit/7f10d7eac32693830c66f97700f64284b69d0a28))
+
+
+### Refactor
+
+ -  **langchain4j**  Update tool execution method to return `resultText` ([4f2905084c9d976](https://github.com/bsorrentino/langgraph4j/commit/4f2905084c9d9766c6c0fadc71da7b340d883c3e))
+    > - Updated MCPIntegrationITest, LC4jToolMapBuilder to use &#x60;resultText()&#x60; directly from the executed MCPClient response.
+
+
+### ALM 
+
+ -  bump to version 1.6.5 ([c47ccee46ec9730](https://github.com/bsorrentino/langgraph4j/commit/c47ccee46ec973015d94a4ed9ccbe9b371fba99c))
+   
+ -  update dependencies versions ([c11c79a36fcadfe](https://github.com/bsorrentino/langgraph4j/commit/c11c79a36fcadfec999a5137cdb59dcd2778dc8d))
+    > - Bump langchain4j version to 1.6.0
+ > - Bump langchain4j beta version to 1.6.0-beta12
+ > - Bump spring-ai version to 1.0.2
+
+ -  bump to version 1.6-SNAPSHOT ([4ea2e13261dd4d3](https://github.com/bsorrentino/langgraph4j/commit/4ea2e13261dd4d35f3785b770823e1bd305486a7))
+   
+
+
+
+
+
+
 <!-- "name: v1.6.4" is a release tag -->
 
 ## [v1.6.4](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.6.4) (2025-09-18)
