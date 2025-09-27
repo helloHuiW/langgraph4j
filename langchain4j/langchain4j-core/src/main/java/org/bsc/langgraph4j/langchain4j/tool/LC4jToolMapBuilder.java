@@ -1,9 +1,11 @@
 package org.bsc.langgraph4j.langchain4j.tool;
 
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.DefaultToolExecutor;
+import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 
 import java.util.HashMap;
@@ -65,8 +67,9 @@ public class LC4jToolMapBuilder<T extends LC4jToolMapBuilder<T>> {
      */
     public final T tool( McpClient mcpClient ) {
         Objects.requireNonNull(mcpClient, "mcpClient cannot be null");
+
         for (var toolSpecification : mcpClient.listTools()) {
-            tool(toolSpecification, (request, memoryId) -> mcpClient.executeTool(request));
+            tool(toolSpecification, (request, o) -> mcpClient.executeTool(request).resultText());
         }
         return result();
     }
