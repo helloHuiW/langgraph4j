@@ -54,7 +54,7 @@ public class DemoConsoleController implements CommandLineRunner {
                 perform test twice with message 'this is a test' and reports their results and also number of current active threads
                 """;
 
-        var streaming = false;
+        var streaming = true;
 
         runAgentWithCancellation(userMessage, streaming, console);
 
@@ -222,7 +222,7 @@ public class DemoConsoleController implements CommandLineRunner {
 
         CompletableFuture.runAsync(() -> {
             try {
-                Thread.sleep(2500);
+                Thread.sleep(3500);
                 generator.cancel(true);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
