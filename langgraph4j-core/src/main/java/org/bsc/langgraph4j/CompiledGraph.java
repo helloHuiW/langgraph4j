@@ -862,7 +862,7 @@ public class CompiledGraph<State extends AgentState> {
 
                 return evaluateAction( action ).get();
             }
-            catch( Exception e ) {
+            catch( Throwable e ) {
                 log.error( e.getMessage(), e );
                 return Data.error(e);
             }
