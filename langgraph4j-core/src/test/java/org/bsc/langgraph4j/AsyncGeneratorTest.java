@@ -7,30 +7,21 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AsyncGeneratorTest {
+
     @Test
     public void asyncIteratorTest() throws Exception {
 
-        String[] myArray = { "e1", "e2", "e3", "e4", "e5"};
+        var myArray = List.of( "e1", "e2", "e3", "e4", "e5" );
 
-        final AsyncGenerator<String> it = new AsyncGenerator<String>() {
-
-            private int cursor = 0;
-            @Override
-            public Data<String> next() {
-
-                if (cursor == myArray.length) {
-                    return Data.done();
-                }
-
-                return Data.of(completedFuture(myArray[cursor++]));
-            }
-        };
+        final var it = AsyncGenerator.from(myArray.iterator());
 
         List<String> result = new ArrayList<>();
 
@@ -44,9 +35,72 @@ public class AsyncGeneratorTest {
         }
         System.out.println( "Finished");
 
-        assertEquals(myArray.length, result.size() );
-        assertIterableEquals( List.of(myArray), result );
+        assertEquals(myArray.size(), result.size() );
+        assertIterableEquals( myArray, result );
     }
+
+    @Test
+    public void asyncIteratorCancelTest() throws Exception {
+
+        var myArray = List.of( "e1", "e2", "e3", "e4", "e5" );
+
+        final var it = new AsyncGenerator.BaseCancellable<String>() {
+
+            private int cursor = 0;
+            @Override
+            public Data<String> next() {
+
+                if (cursor == myArray.size()) {
+                    return Data.done();
+                }
+
+                return Data.of(completedFuture(myArray.get(cursor++)));
+            }
+        };
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(400);
+                it.cancel(true);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        final List<String> result = new ArrayList<>();
+
+        it.forEachAsync( value -> {
+                    try {
+                        Thread.sleep(100);
+                        result.add(value);
+                        System.out.println(value);
+                    } catch (InterruptedException e) {
+                        throw new CancellationException( "Cancelled" );
+                    }
+                })
+                .thenAccept( t -> {
+                    fail( "Should not reach end of iteration");
+                    System.out.println( "Finished");
+                })
+                .exceptionally( ex -> {
+                    assertInstanceOf( CancellationException.class, ex.getCause() );
+                    System.out.println( ex.getCause().getMessage() );
+                    return null;
+                });
+
+        var sizeAfterInterruption = result.size();
+        assertNotEquals( myArray.size(), result.size() );
+
+        for (String i : it) {
+            result.add(i);
+            System.out.println(i);
+        }
+        System.out.println( "Finished");
+
+        assertEquals(sizeAfterInterruption, result.size() );
+
+    }
+
     @Test
     public void asyncQueueTest() throws Exception {
 

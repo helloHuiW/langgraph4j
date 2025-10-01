@@ -17,6 +17,7 @@ import org.springframework.stereotype.Controller;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
 
@@ -29,8 +30,7 @@ public class DemoConsoleController implements CommandLineRunner {
 
     private final ChatModel chatModel;
 
-    public DemoConsoleController( ChatModel chatModel ) {
-
+    public DemoConsoleController(ChatModel chatModel) {
         this.chatModel = chatModel;
     }
 
@@ -51,17 +51,19 @@ public class DemoConsoleController implements CommandLineRunner {
         var console = System.console();
 
         var userMessage = """
-        perform test twice with message 'this is a test' and reports their results and also number of current active threads
-        """;
+                perform test twice with message 'this is a test' and reports their results and also number of current active threads
+                """;
 
-        var streaming = false;
+        var streaming = true;
 
-        runAgent( userMessage, streaming, console  );
+        runAgentWithCancellation(userMessage, streaming, console);
+
+        // runAgent( userMessage, streaming, console  );
 
         // runAgentWithApproval( userMessage, streaming, console  );
     }
 
-    public void runAgentWithApproval( String userMessage, boolean streaming, java.io.Console console ) throws Exception {
+    public void runAgentWithApproval(String userMessage, boolean streaming, java.io.Console console) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -71,22 +73,22 @@ public class DemoConsoleController implements CommandLineRunner {
 
         var agent = AgentExecutorEx.builder()
                 .chatModel(chatModel, streaming)
-                .toolsFromObject( new TestTools()) // Support without providing tools
-                .approvalOn( "execTest", ( nodeId, state ) ->
-                        InterruptionMetadata.builder( nodeId, state )
-                                .addMetadata( "label", "confirm execution of test?")
+                .toolsFromObject(new TestTools()) // Support without providing tools
+                .approvalOn("execTest", (nodeId, state) ->
+                        InterruptionMetadata.builder(nodeId, state)
+                                .addMetadata("label", "confirm execution of test?")
                                 .build())
                 .build()
                 .compile(compileConfig);
 
-        log.info( "{}", agent.getGraph( GraphRepresentation.Type.MERMAID, "ReAct Agent", false));
+        log.info("{}", agent.getGraph(GraphRepresentation.Type.MERMAID, "ReAct Agent", false));
 
-        Map<String,Object> input = Map.of("messages", new UserMessage(userMessage) );
+        Map<String, Object> input = Map.of("messages", new UserMessage(userMessage));
 
         var runnableConfig = RunnableConfig.builder().build();
 
-        while( true ) {
-            var result = agent.stream(input, runnableConfig );
+        while (true) {
+            var result = agent.stream(input, runnableConfig);
 
             var output = result.stream()
                     .peek(s -> {
@@ -100,7 +102,7 @@ public class DemoConsoleController implements CommandLineRunner {
                     .orElseThrow();
 
             if (output.isEND()) {
-                console.format( "result: %s\n",
+                console.format("result: %s\n",
                         output.state().lastMessage()
                                 .map(AssistantMessage.class::cast)
                                 .map(AssistantMessage::getText)
@@ -111,7 +113,7 @@ public class DemoConsoleController implements CommandLineRunner {
 
                 var returnValue = AsyncGenerator.resultValue(result);
 
-                if( returnValue.isPresent() ) {
+                if (returnValue.isPresent()) {
 
                     log.info("interrupted: {}", returnValue.orElse("NO RESULT FOUND!"));
 
@@ -133,7 +135,7 @@ public class DemoConsoleController implements CommandLineRunner {
         }
     }
 
-    public void runAgent( String userMessage, boolean streaming, java.io.Console console ) throws Exception {
+    public void runAgent(String userMessage, boolean streaming, java.io.Console console) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -141,30 +143,29 @@ public class DemoConsoleController implements CommandLineRunner {
                 .checkpointSaver(saver)
                 .build();
 
-        var agentBuilder =  AgentExecutor.builder()
+        var agentBuilder = AgentExecutor.builder()
                 .chatModel(chatModel, streaming);
 
         // FIX for GEMINI MODEL
-        if( chatModel instanceof VertexAiGeminiChatModel ) {
+        if (chatModel instanceof VertexAiGeminiChatModel) {
             agentBuilder
 //                .defaultSystem( """
 //                When call tools, You must only output the function or tool to call, using strict JSON.
 //                Do not output commentary or internal thoughts.
 //                """)
-                .toolsFromObject( new TestTools4Gemini());
-        }
-        else {
-            agentBuilder.toolsFromObject( new TestTools());
+                    .toolsFromObject(new TestTools4Gemini());
+        } else {
+            agentBuilder.toolsFromObject(new TestTools());
         }
 
         var agent = agentBuilder.build().compile(compileConfig);
 
-        log.info( "{}", agent.getGraph( GraphRepresentation.Type.MERMAID, "ReAct Agent", false));
+        log.info("{}", agent.getGraph(GraphRepresentation.Type.MERMAID, "ReAct Agent", false));
 
-        Map<String,Object> input = Map.of("messages", new UserMessage(userMessage) );
+        Map<String, Object> input = Map.of("messages", new UserMessage(userMessage));
         var runnableConfig = RunnableConfig.builder().build();
 
-        var result = agent.stream(input, runnableConfig );
+        var result = agent.stream(input, runnableConfig);
 
         var output = result.stream()
                 .peek(s -> {
@@ -177,12 +178,79 @@ public class DemoConsoleController implements CommandLineRunner {
                 .reduce((a, b) -> b)
                 .orElseThrow();
 
-        console.format( "result: %s\n",
+        console.format("result: %s\n",
                 output.state().lastMessage()
                         .map(AssistantMessage.class::cast)
                         .map(AssistantMessage::getText)
                         .orElseThrow());
 
+    }
+
+    public void runAgentWithCancellation(String userMessage, boolean streaming, java.io.Console console) throws Exception {
+
+        var saver = new MemorySaver();
+
+        var compileConfig = CompileConfig.builder()
+                .checkpointSaver(saver)
+                .build();
+
+        var agentBuilder = AgentExecutor.builder()
+                .chatModel(chatModel, streaming);
+
+        // FIX for GEMINI MODEL
+        if (chatModel instanceof VertexAiGeminiChatModel) {
+            agentBuilder
+//                .defaultSystem( """
+//                When call tools, You must only output the function or tool to call, using strict JSON.
+//                Do not output commentary or internal thoughts.
+//                """)
+                    .toolsFromObject(new TestTools4Gemini());
+        } else {
+            agentBuilder.toolsFromObject(new TestTools());
+        }
+
+        var agent = agentBuilder.build().compile(compileConfig);
+
+        log.info("{}", agent.getGraph(GraphRepresentation.Type.MERMAID, "ReAct Agent", false));
+
+        Map<String, Object> input = Map.of("messages", new UserMessage(userMessage));
+
+        var runnableConfig = RunnableConfig.builder().build();
+
+        var generator = agent.stream(input, runnableConfig);
+
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(3500);
+                generator.cancel(true);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        var output = generator.stream()
+                .peek(s -> {
+                    if (s instanceof StreamingOutput<?> out) {
+                        System.out.printf("%s: (%s)\n", out.node(), out.chunk());
+                    } else {
+                        System.out.println(s.node());
+                    }
+                })
+                .reduce((a, b) -> b)
+                .orElseThrow();
+
+
+        if (!generator.isCancelled()) {
+            console.format("generator lastState: %s\n",
+                    output.state().lastMessage()
+                            .map(AssistantMessage.class::cast)
+                            .map(AssistantMessage::getText)
+                            .orElseThrow());
+        } else {
+            var result = AsyncGenerator.resultValue(generator).orElse("<None>");
+            console.format("generator execution has been cancelled on node: '%s' with result: %s\n", output.node(), result);
+        }
     }
 
 }
