@@ -385,7 +385,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> stream( GraphInput input, RunnableConfig config ) {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> stream( GraphInput input, RunnableConfig config ) {
         requireNonNull(config, "config cannot be null");
         requireNonNull( input, "input cannot be null" );
 
@@ -401,7 +401,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> stream( Map<String,Object> inputs, RunnableConfig config ) {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> stream( Map<String,Object> inputs, RunnableConfig config ) {
         return stream(  ( inputs == null ) ? new GraphResume() : new GraphArgs(inputs), config );
     }
 
@@ -535,7 +535,7 @@ public class CompiledGraph<State extends AgentState> {
      *
      * @param <Output> the type of the output
      */
-    public class AsyncNodeGenerator<Output extends NodeOutput<State>> implements AsyncGenerator<Output> {
+    public class AsyncNodeGenerator<Output extends NodeOutput<State>> extends AsyncGenerator.BaseCancellable<Output> {
 
         static class Context {
             record ReturnFromEmbed( Object value ) {
