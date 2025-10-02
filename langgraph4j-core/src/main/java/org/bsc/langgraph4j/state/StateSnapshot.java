@@ -2,13 +2,14 @@ package org.bsc.langgraph4j.state;
 
 import org.bsc.langgraph4j.NodeOutput;
 import org.bsc.langgraph4j.RunnableConfig;
+import org.bsc.langgraph4j.SnapshotOutput;
 import org.bsc.langgraph4j.checkpoint.Checkpoint;
 
 import java.util.Objects;
 
 import static java.lang.String.*;
 
-public final class StateSnapshot<State extends AgentState> extends NodeOutput<State> {
+public final class StateSnapshot<State extends AgentState> extends NodeOutput<State> implements SnapshotOutput {
     private final RunnableConfig config;
 
     public String next( ) {
@@ -17,22 +18,6 @@ public final class StateSnapshot<State extends AgentState> extends NodeOutput<St
 
     public RunnableConfig config() {
         return config;
-    }
-
-    /**
-     * @deprecated Use {@link #config()} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public RunnableConfig getConfig( ) {
-        return config();
-    }
-
-    /**
-     * @deprecated Use {@link #next()} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public String getNext( ) {
-        return next();
     }
 
     private StateSnapshot( String node, State state, RunnableConfig config) {
