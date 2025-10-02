@@ -99,8 +99,7 @@ public class CompiledSubGraphTest {
                 .compile(compileConfig);
     }
 
-    @Test
-    public void testCompileSubGraphWithInterruptionUsingException() throws Exception {
+    private void testCompileSubGraphWithInterruptionUsingException( CompiledGraph.StreamMode mode ) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -125,7 +124,10 @@ public class CompiledSubGraphTest {
                 .addEdge("NODE4", "NODE5")
                 .addEdge("NODE5", END)
                 .compile(compileConfig);
-        var runnableConfig = RunnableConfig.builder().build();
+
+        var runnableConfig = RunnableConfig.builder()
+                                .streamMode(mode)
+                                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -173,9 +175,20 @@ public class CompiledSubGraphTest {
 
     }
 
-
     @Test
-    public void testCompileSubGraphWithInterruptionSharingSaver() throws Exception {
+    public void testCompileSubGraphWithInterruptionUsingExceptionAndModeValues() throws Exception {
+        testCompileSubGraphWithInterruptionUsingException( CompiledGraph.StreamMode.VALUES );
+    }
+
+    /**
+     * test issue #248
+     */
+    @Test
+    public void testCompileSubGraphWithInterruptionUsingExceptionAndModeSnapshots() throws Exception {
+        testCompileSubGraphWithInterruptionUsingException( CompiledGraph.StreamMode.SNAPSHOTS );
+    }
+
+    private void testCompileSubGraphWithInterruptionSharingSaver(  CompiledGraph.StreamMode mode ) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -202,8 +215,9 @@ public class CompiledSubGraphTest {
                 .compile(compileConfig);
 
         var runnableConfig = RunnableConfig.builder()
-                                .threadId("1")
-                                .build();
+                .threadId("1")
+                .streamMode(mode)
+                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -248,7 +262,19 @@ public class CompiledSubGraphTest {
     }
 
     @Test
-    public void testCompileSubGraphWithInterruptionWithDifferentSaver() throws Exception {
+    public void testCompileSubGraphWithInterruptionSharingSaverAndModeValues() throws Exception {
+        testCompileSubGraphWithInterruptionSharingSaver(CompiledGraph.StreamMode.VALUES);
+    }
+
+    /**
+     * test issue #248
+     */
+    @Test( )
+    public void testCompileSubGraphWithInterruptionSharingSaverAndModeSnapshots() throws Exception {
+        testCompileSubGraphWithInterruptionSharingSaver(CompiledGraph.StreamMode.SNAPSHOTS);
+    }
+
+    private void testCompileSubGraphWithInterruptionWithDifferentSaver( CompiledGraph.StreamMode mode ) throws Exception {
 
         var parentSaver = new MemorySaver();
 
@@ -275,7 +301,9 @@ public class CompiledSubGraphTest {
                 .addEdge("NODE5", END)
                 .compile(compileConfig);
 
-        var runnableConfig = RunnableConfig.builder().build();
+        var runnableConfig = RunnableConfig.builder()
+                                .streamMode(mode)
+                                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -320,7 +348,20 @@ public class CompiledSubGraphTest {
     }
 
     @Test
-    public void testNestedCompiledSubgraphFormIssue216() throws Exception {
+    public void testCompileSubGraphWithInterruptionWithDifferentSaverAndModeValues() throws Exception {
+        testCompileSubGraphWithInterruptionWithDifferentSaver( CompiledGraph.StreamMode.VALUES );
+    }
+
+    /**
+     * test issue #248
+     */
+    @Test
+    public void testCompileSubGraphWithInterruptionWithDifferentSaverAndModeSnapshots() throws Exception {
+        testCompileSubGraphWithInterruptionWithDifferentSaver( CompiledGraph.StreamMode.SNAPSHOTS );
+    }
+
+
+    private void testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode mode ) throws Exception {
 
         var subSubGraph = new StateGraph<>(MyState::new)
                 .addNode("foo1", _makeNode("foo1"))
@@ -352,7 +393,9 @@ public class CompiledSubGraphTest {
                 .addEdge("main2", StateGraph.END)
                 .compile();
 
-        var runnableConfig = RunnableConfig.builder().build();
+        var runnableConfig = RunnableConfig.builder()
+                                .streamMode(mode)
+                                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -362,5 +405,21 @@ public class CompiledSubGraphTest {
                 .peek( out -> log.info("output: {}", out) )
                 .reduce((a, b) -> b);
 
+    }
+
+    /**
+     * test issue #216
+     */
+    @Test
+    public void testNestedCompiledSubgraphFormIssue216AndModeValues() throws Exception {
+        testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode.VALUES );
+    }
+
+    /**
+     * test issue #216 #248
+     */
+    @Test
+    public void testNestedCompiledSubgraphFormIssue216AndModeSnapshots() throws Exception {
+        testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode.SNAPSHOTS );
     }
 }
