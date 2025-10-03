@@ -10,7 +10,8 @@ import org.bsc.langgraph4j.prebuilt.MessagesState;
 import org.bsc.langgraph4j.serializer.std.ObjectStreamStateSerializer;
 import org.bsc.langgraph4j.state.AgentState;
 import org.bsc.langgraph4j.subgraph.SubGraphOutput;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.List;
 import java.util.Map;
@@ -99,7 +100,9 @@ public class CompiledSubGraphTest {
                 .compile(compileConfig);
     }
 
-    private void testCompileSubGraphWithInterruptionUsingException( CompiledGraph.StreamMode mode ) throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    private void testCompileSubGraphInterruptionUsingException( CompiledGraph.StreamMode mode ) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -175,20 +178,9 @@ public class CompiledSubGraphTest {
 
     }
 
-    @Test
-    public void testCompileSubGraphWithInterruptionUsingExceptionAndModeValues() throws Exception {
-        testCompileSubGraphWithInterruptionUsingException( CompiledGraph.StreamMode.VALUES );
-    }
-
-    /**
-     * test issue #248
-     */
-    @Test
-    public void testCompileSubGraphWithInterruptionUsingExceptionAndModeSnapshots() throws Exception {
-        testCompileSubGraphWithInterruptionUsingException( CompiledGraph.StreamMode.SNAPSHOTS );
-    }
-
-    private void testCompileSubGraphWithInterruptionSharingSaver(  CompiledGraph.StreamMode mode ) throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    public void testCompileSubGraphInterruptionSharingSaver(  CompiledGraph.StreamMode mode ) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -261,20 +253,9 @@ public class CompiledSubGraphTest {
                 "[NODE5<myNewValue>]"), output.get().state().messages() );
     }
 
-    @Test
-    public void testCompileSubGraphWithInterruptionSharingSaverAndModeValues() throws Exception {
-        testCompileSubGraphWithInterruptionSharingSaver(CompiledGraph.StreamMode.VALUES);
-    }
-
-    /**
-     * test issue #248
-     */
-    @Test( )
-    public void testCompileSubGraphWithInterruptionSharingSaverAndModeSnapshots() throws Exception {
-        testCompileSubGraphWithInterruptionSharingSaver(CompiledGraph.StreamMode.SNAPSHOTS);
-    }
-
-    private void testCompileSubGraphWithInterruptionWithDifferentSaver( CompiledGraph.StreamMode mode ) throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    public void testCompileSubGraphInterruptionWithDifferentSaver( CompiledGraph.StreamMode mode ) throws Exception {
 
         var parentSaver = new MemorySaver();
 
@@ -347,21 +328,9 @@ public class CompiledSubGraphTest {
                 "[NODE5]"), output.get().state().messages() );
     }
 
-    @Test
-    public void testCompileSubGraphWithInterruptionWithDifferentSaverAndModeValues() throws Exception {
-        testCompileSubGraphWithInterruptionWithDifferentSaver( CompiledGraph.StreamMode.VALUES );
-    }
-
-    /**
-     * test issue #248
-     */
-    @Test
-    public void testCompileSubGraphWithInterruptionWithDifferentSaverAndModeSnapshots() throws Exception {
-        testCompileSubGraphWithInterruptionWithDifferentSaver( CompiledGraph.StreamMode.SNAPSHOTS );
-    }
-
-
-    private void testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode mode ) throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    public void testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode mode ) throws Exception {
 
         var subSubGraph = new StateGraph<>(MyState::new)
                 .addNode("foo1", _makeNode("foo1"))
@@ -407,19 +376,4 @@ public class CompiledSubGraphTest {
 
     }
 
-    /**
-     * test issue #216
-     */
-    @Test
-    public void testNestedCompiledSubgraphFormIssue216AndModeValues() throws Exception {
-        testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode.VALUES );
-    }
-
-    /**
-     * test issue #216 #248
-     */
-    @Test
-    public void testNestedCompiledSubgraphFormIssue216AndModeSnapshots() throws Exception {
-        testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode.SNAPSHOTS );
-    }
 }

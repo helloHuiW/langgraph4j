@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AsyncGeneratorTest {
 
     @Test
-    public void asyncIteratorTest() throws Exception {
+    public void asyncForEachAsyncTest() throws Exception {
 
         var myArray = List.of( "e1", "e2", "e3", "e4", "e5" );
 
@@ -40,7 +40,7 @@ public class AsyncGeneratorTest {
     }
 
     @Test
-    public void asyncIteratorCancelTest() throws Exception {
+    public void asyncForEachAsyncCancelTest() throws Exception {
 
         var myArray = List.of( "e1", "e2", "e3", "e4", "e5" );
 
@@ -104,7 +104,7 @@ public class AsyncGeneratorTest {
     @Test
     public void asyncQueueTest() throws Exception {
 
-        final AsyncGenerator<String> it = AsyncGeneratorQueue.of( new LinkedBlockingQueue<AsyncGenerator.Data<String>>(), queue -> {
+        final AsyncGenerator<String> it = AsyncGeneratorQueue.of(new LinkedBlockingQueue<>(), queue -> {
             for( int i = 0 ; i < 10 ; ++i ) {
                 queue.add( AsyncGenerator.Data.of( completedFuture("e"+i )) );
             }

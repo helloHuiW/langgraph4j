@@ -17,12 +17,12 @@ import static org.bsc.langgraph4j.action.AsyncEdgeAction.edge_async;
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SubGraphTest {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SubGraphTest.class);
+public class StateSubGraphTest {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StateSubGraphTest.class);
 
     @BeforeAll
     public static void initLogging() throws IOException {
-        try( var is = SubGraphTest.class.getResourceAsStream("/logging.properties") ) {
+        try( var is = StateSubGraphTest.class.getResourceAsStream("/logging.properties") ) {
             LogManager.getLogManager().readConfiguration(is);
         }
     }
@@ -531,7 +531,7 @@ public class SubGraphTest {
 
 
     @Test
-    public void testCheckpointWithSubgraph() throws Exception {
+    public void testCheckpointWithMergeSubgraph() throws Exception {
 
         var compileConfig = CompileConfig.builder().checkpointSaver(new MemorySaver()).build();
 
