@@ -2,6 +2,98 @@
 
 
 
+<!-- "name: v1.7.0-beta1" is a release tag -->
+
+## [v1.7.0-beta1](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta1) (2025-10-04)
+
+### Features
+
+ *  **GraphInput**  Add noArgs method to GraphInput ([33cbeb5af6bafd7](https://github.com/bsorrentino/langgraph4j/commit/33cbeb5af6bafd744801f4fd757bcb482b0cf240))
+   
+ *  **core**  Add SubGraphSnapshotOutput class for handle subgraph snapshot output ([94613d273298b3d](https://github.com/bsorrentino/langgraph4j/commit/94613d273298b3de29a60dfbdb9b2f1918f1255c))
+     > work on #248
+   
+ *  **core**  add new SnapshotOutput to make easier check snapshot output type ([5207ab0e37dd89a](https://github.com/bsorrentino/langgraph4j/commit/5207ab0e37dd89ae6d2ce1f418849b956acd1360))
+     > work on #248
+   
+
+
+### Documentation
+
+ -  bump to version 1.7.0-beta1 ([ab71a164279912c](https://github.com/bsorrentino/langgraph4j/commit/ab71a164279912c81b059924787c06af5f886103))
+
+ -  add the documentation how to achieve InterruptionMetadata after occur an interruptions ([6a7624b938ff6a6](https://github.com/bsorrentino/langgraph4j/commit/6a7624b938ff6a6ee02539b610fc54311d0a0fe9))
+     > resolve #240
+
+ -  add cancelaltion doc ([3fe08cd18c8f263](https://github.com/bsorrentino/langgraph4j/commit/3fe08cd18c8f2634b54bde61f9456f0f73fc2a53))
+
+ -  update changelog ([fc17d2f0b74709f](https://github.com/bsorrentino/langgraph4j/commit/fc17d2f0b74709f745e389ac484be6e96cf5c3d7))
+
+
+### Refactor
+
+ -  **StateSnapshot**  Extend StateSnapshot with SnapshotOutput interface and remove deprecated methods ([2e8e6dd348ca5c3](https://github.com/bsorrentino/langgraph4j/commit/2e8e6dd348ca5c37c3e6f049fb32ae74b2b8a09b))
+    > work on #248
+
+ -  **subgraphoutput**  remove factory method  and deprecate methods ([b20dd1f14ecca8c](https://github.com/bsorrentino/langgraph4j/commit/b20dd1f14ecca8c5d692c3c06046acc0d3970faa))
+    > - move the factory method in new utility class SubGraphOutputFactory
+ > work on #248
+
+ -  **SubCompiledGraphNodeAction**  pass parent stream mode to SubGraph runnable config ([107d5dd2429ef81](https://github.com/bsorrentino/langgraph4j/commit/107d5dd2429ef813ac8e01351d9025b273cd427e))
+    > work on #248
+
+ -  **core**  handle Throwable instead of Exception ([41e00f6d1bf7097](https://github.com/bsorrentino/langgraph4j/commit/41e00f6d1bf709799862756f4003311b8ef27070))
+    > work on #117
+
+ -  **ParallelNode**  Switched from (removed) collectAsync() to reduce() ([557404fd4e7aa1d](https://github.com/bsorrentino/langgraph4j/commit/557404fd4e7aa1d0c1e3dd2fb55b6ec3b249b481))
+    > work on #117
+
+ -  **core**  Convert AsyncGenerator to Cancellable for stream methods ([b1e15968d8b7441](https://github.com/bsorrentino/langgraph4j/commit/b1e15968d8b74415c5b730e0a24ab0659681d3b9))
+    > work on #117
+
+
+### ALM 
+
+ -  bump to version 1.7.0-beta1 ([13ffa67a2d67c60](https://github.com/bsorrentino/langgraph4j/commit/13ffa67a2d67c60ff25ee432fec5d9d989db627c))
+   
+ -  update junit-bom version from 5.10.2 to 5.11.0 ([d072672ed149f80](https://github.com/bsorrentino/langgraph4j/commit/d072672ed149f804e1bb4a8f23c54f2fe556f237))
+    > - add support for unit-jupiter-params
+
+ -  **langchain4j**  Update langchain4j version numbers ([f0a9793f35340ff](https://github.com/bsorrentino/langgraph4j/commit/f0a9793f35340ff900445d10c04585fbfd950fad))
+    > - bumped the beta version of langchain4j to 1.7.1-beta14
+
+ -  Bump async-generator version from 4.0.0-beta1 to 4.0.0-beta2 ([3346f68adb5d5da](https://github.com/bsorrentino/langgraph4j/commit/3346f68adb5d5da467f7ffab60df717841ce7843))
+    > work on #117
+
+ -  **core**  upgrade async-generator to 4.0.0-beta1 ([ad0153ad94def07](https://github.com/bsorrentino/langgraph4j/commit/ad0153ad94def079ce1119014db217580c71970e))
+   
+ -  **core**  Updated version of async-generator dependency to 4.0-SNAPSHOT ([786a8dd6dc95abd](https://github.com/bsorrentino/langgraph4j/commit/786a8dd6dc95abde133e857f4447170e821495fb))
+    > work on #117
+
+ -  bump to version 1.6-SNAPSHOT ([5f64f52a49a1d7f](https://github.com/bsorrentino/langgraph4j/commit/5f64f52a49a1d7ff9bd9e5c7db93851cf28ea28c))
+   
+
+### Test 
+
+ -  **core**  refine unit tests ([bd858a439984f31](https://github.com/bsorrentino/langgraph4j/commit/bd858a439984f313691e63b6a2a3580679d3ed4b))
+    > - add dedicated cancellation test
+
+ -  **core**  test the support of snapshot output in subgraph ([2d7f34d2317beb1](https://github.com/bsorrentino/langgraph4j/commit/2d7f34d2317beb11e2da45eccce17145dbcdce55))
+    > work on #248
+
+ -  **langchain4j**  test cancellation during stream response ([cb3076229e3cdc7](https://github.com/bsorrentino/langgraph4j/commit/cb3076229e3cdc75e81cc1f40f21f45108cbbe95))
+    > work on #117
+
+ -  **spring-ai**  test cancellation during stream response ([8ca46387b9d3759](https://github.com/bsorrentino/langgraph4j/commit/8ca46387b9d37590c043f64ca9fa376522b11bde))
+    > work on #117
+
+ -  **core**  add cncellation tests ([97aea0b300bec89](https://github.com/bsorrentino/langgraph4j/commit/97aea0b300bec8925753c8397cf1143c7692ace5))
+   
+
+
+
+
+
 <!-- "name: v1.6.5" is a release tag -->
 
 ## [v1.6.5](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.6.5) (2025-09-27)
