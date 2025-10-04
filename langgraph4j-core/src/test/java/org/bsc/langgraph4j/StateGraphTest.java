@@ -75,10 +75,6 @@ public class StateGraphTest {
                 workflow.addEdge(END, "agent_1"));
         log.info("{}", exception.getMessage());
 
-//        exception = assertThrows(GraphStateException.class, () ->
-//                workflow.addEdge("agent_1", "agent_2"));
-//        System.out.println(exception.getMessage());
-
         workflow.addNode("agent_2", node_async(state -> {
             log.info("agent_2\n{}", state);
             return Map.of("prop2", "test");
@@ -115,7 +111,6 @@ public class StateGraphTest {
         Map<String, String> expected = Map.of("input", "test1", "prop1", "test");
 
         assertIterableEquals(sortMap(expected), sortMap(result.get().data()));
-        //assertDictionaryOfAnyEqual( expected, result.data )
 
     }
 
@@ -370,7 +365,7 @@ public class StateGraphTest {
         assertTrue(result.isPresent());
         assertIterableEquals(List.of("A", "A1", "A2", "A3", "B", "C"), result.get().messages());
 
-        workflow = new StateGraph<State>(State.SCHEMA, State::new)
+        workflow = new StateGraph<>(State.SCHEMA, State::new)
                 //.addNode("A", makeNode("A"))
                 .addNode("A1", makeNode("A1"))
                 .addNode("A2", makeNode("A2"))
@@ -512,8 +507,6 @@ public class StateGraphTest {
         assertNotNull(resultValue);
 
         System.out.println(resultValue);
-
-
     }
 
     @Test
