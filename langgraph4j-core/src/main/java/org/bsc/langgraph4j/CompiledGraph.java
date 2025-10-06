@@ -422,7 +422,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> streamSnapshots( GraphInput input, RunnableConfig config )  {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> streamSnapshots( GraphInput input, RunnableConfig config )  {
         requireNonNull(config, "config cannot be null");
 
         final AsyncNodeGenerator<NodeOutput<State>> generator = new AsyncNodeGenerator<>( input, config.withStreamMode(StreamMode.SNAPSHOTS) );
@@ -436,7 +436,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> streamSnapshots( Map<String,Object> inputs, RunnableConfig config )  {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> streamSnapshots( Map<String,Object> inputs, RunnableConfig config )  {
         return streamSnapshots( ( inputs == null ) ? new GraphResume() : new GraphArgs(inputs), config );
     }
 

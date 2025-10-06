@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -158,12 +158,21 @@ public interface LangGraphStudioServer {
         }
     }
 
+    class CacheEntry {
+        final CompiledGraph<? extends AgentState> compiledGraph;
+        AsyncGenerator.Cancellable<? extends NodeOutput<? extends AgentState>> generator;
+
+        public CacheEntry(CompiledGraph<? extends AgentState> compiledGraph) {
+            this.compiledGraph = compiledGraph;
+        }
+    }
+
     record Instance( String title,
                      StateGraph<? extends AgentState> graph,
                      CompileConfig compileConfig,
                      List<ArgumentMetadata> args,
                      ObjectMapper objectMapper,
-                     Map<PersistentConfig, CompiledGraph<? extends AgentState>> cache
+                     Map<PersistentConfig, CacheEntry> cache
     ) {
         public Instance {
             requireNonNull(graph, "graph cannot be null");
@@ -193,7 +202,7 @@ public interface LangGraphStudioServer {
                         StateGraph<? extends AgentState> graph,
                         CompileConfig compileConfig,
                         List<ArgumentMetadata> args) {
-            this(title, graph, compileConfig, args, objectMapperFromGraph(graph), new HashMap<>());
+            this(title, graph, compileConfig, args, objectMapperFromGraph(graph), new ConcurrentHashMap<>());
         }
 
         public InitGraphData toInitGraphData(String id) {
@@ -213,6 +222,7 @@ public interface LangGraphStudioServer {
                         """, e.getMessage()), args());
             }
         }
+
         public static Builder builder() {
             return new Builder();
         }
@@ -416,7 +426,6 @@ public interface LangGraphStudioServer {
      * Servlet for handling graph stream requests.
      */
     class GraphStreamServlet extends HttpServlet {
-
         final Map<String,Instance> instanceMap;
         final Logger log = LangGraphStudioServer.log;
 
@@ -485,50 +494,98 @@ public interface LangGraphStudioServer {
         }
 
         /**
+         * Cancel running iteration
+         *
+         */
+        @Override
+        protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            final var instanceId = instanceIdFromRequest( req )
+                    .orElseThrow( () -> new ServletException("instance id is not found in req"));
+
+            final var instance = requireNonNull( instanceMap.get( instanceId ), format("instance not found with id: [%s]", instanceId));
+
+            final var session = requireNonNull( req.getSession(true), "session cannot be null");
+
+            final var threadId = ofNullable(req.getParameter("thread"))
+                    .orElseThrow(() -> new IllegalStateException("Missing thread id!"));
+
+            var persistentConfig = new PersistentConfig( session.getId(), instanceId, threadId);
+
+            var cacheEntry = instance.cache().get(persistentConfig);
+
+            if( cacheEntry == null ) {
+                log.warn( "cache for instanceId: {} and threadId: {} not found!", instanceId, threadId);
+                return;
+            }
+            if( cacheEntry.generator == null ) {
+                log.warn( "generator for instanceId: {} and threadId: {} is null!", instanceId, threadId);
+                return;
+            }
+            if( cacheEntry.generator.isCancelled() ) {
+                log.warn( "generator for instanceId: {} and threadId: {} is already cancelled!", instanceId, threadId);
+                return;
+            }
+            // TODO verify if generator is already completed or interrupted
+
+            var result = cacheEntry.generator.cancel(true);
+
+            log.info( "cancel generator requested for instanceId: {} and threadId: {} with result: {}", instanceId, threadId, result);
+        }
+
+        private void cacheGeneratorCleanUp(  LangGraphStudioServer.Instance instance, PersistentConfig config ) {
+            var cacheEntry = requireNonNull(instance, "instance cannot be null")
+                                .cache()
+                                .get( requireNonNull(config, "config cannot be null") );
+            if( cacheEntry != null ) {
+                cacheEntry.generator = null;
+            }
+        }
+
+
+        /**
          * Handles POST requests to stream graph data.
          *
-         * @param request the HTTP request.
-         * @param response the HTTP response.
+         * @param req the HTTP req.
+         * @param resp the HTTP resp.
          * @throws ServletException if a servlet error occurs.
          * @throws IOException if an I/O error occurs.
          */
         @Override
-        protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-            response.setHeader("Accept", "application/json");
-            response.setContentType("text/plain");
-            response.setCharacterEncoding("UTF-8");
+        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            resp.setHeader("Accept", "application/json");
+            resp.setContentType("text/plain");
+            resp.setCharacterEncoding("UTF-8");
 
-            final var instanceId = instanceIdFromRequest( request )
-                                .orElseThrow( () -> new ServletException("instance id is not found in request"));
+            final var instanceId = instanceIdFromRequest( req )
+                                .orElseThrow( () -> new ServletException("instance id is not found in req"));
 
-            final var instance = requireNonNull( instanceMap.get( instanceId ), format("instance not founf with id: [%s]", instanceId));
+            final var instance = requireNonNull( instanceMap.get( instanceId ), format("instance not found with id: [%s]", instanceId));
 
-            final var session = requireNonNull( request.getSession(true), "session cannot be null");
+            final var session = requireNonNull( req.getSession(true), "session cannot be null");
 
-            final var threadId = ofNullable(request.getParameter("thread"))
+            final var threadId = ofNullable(req.getParameter("thread"))
                     .orElseThrow(() -> new IllegalStateException("Missing thread id!"));
 
-            final var resume = ofNullable(request.getParameter("resume"))
+            final var resume = ofNullable(req.getParameter("resume"))
                     .map(Boolean::parseBoolean).orElse(false);
 
-
-            final PrintWriter writer = response.getWriter();
+            final PrintWriter writer = resp.getWriter();
 
             // Start asynchronous processing
-            var asyncContext = request.startAsync();
+            var asyncContext = req.startAsync();
 
             try {
-                AsyncGenerator<? extends NodeOutput<? extends AgentState>> generator = null;
 
-                var persistentConfig = new PersistentConfig( session.getId(), instanceId, threadId);
+                final var persistentConfig = new PersistentConfig( session.getId(), instanceId, threadId);
 
-                var compiledGraph = instance.cache().get(persistentConfig);
+
+                var cacheEntry = instance.cache().get(persistentConfig);
 
                 final Map<String, Object> candidateDataMap;
                 if ( /*resume && */ instance.graph().getStateSerializer() instanceof PlainTextStateSerializer<? extends AgentState> textSerializer) {
-                    candidateDataMap = textSerializer.read(new InputStreamReader(request.getInputStream())).data();
+                    candidateDataMap = textSerializer.read(new InputStreamReader(req.getInputStream())).data();
                 } else {
-                    candidateDataMap = instance.objectMapper().readValue(request.getInputStream(), new TypeReference<>() {});
+                    candidateDataMap = instance.objectMapper().readValue(req.getInputStream(), new TypeReference<>() {});
                 }
 
                 var dataMap = candidateDataMap.entrySet().stream()
@@ -544,14 +601,14 @@ public interface LangGraphStudioServer {
                 if (resume) {
                     log.trace("RESUME REQUEST PREPARE");
 
-                    if (compiledGraph == null) {
+                    if (cacheEntry.compiledGraph == null) {
                         throw new IllegalStateException("Missing CompiledGraph in session!");
                     }
 
-                    var checkpointId = ofNullable(request.getParameter("checkpoint"))
+                    var checkpointId = ofNullable(req.getParameter("checkpoint"))
                             .orElseThrow(() -> new IllegalStateException("Missing checkpoint id!"));
 
-                    var node = request.getParameter("node");
+                    var node = req.getParameter("node");
 
                     var runnableConfig = RunnableConfig.builder()
                             .addMetadata(RunnableConfig.STUDIO_METADATA_KEY, true)
@@ -560,31 +617,31 @@ public interface LangGraphStudioServer {
                             .nextNode(node)
                             .build();
 
-                    var stateSnapshot = compiledGraph.getState(runnableConfig);
+                    var stateSnapshot = cacheEntry.compiledGraph.getState(runnableConfig);
 
                     runnableConfig = stateSnapshot.config();
 
                     log.trace("RESUME UPDATE STATE FORM {} USING CONFIG {}\n{}", node, runnableConfig, dataMap);
 
-                    runnableConfig = compiledGraph.updateState(runnableConfig, dataMap, node);
+                    runnableConfig = cacheEntry.compiledGraph.updateState(runnableConfig, dataMap, node);
 
                     log.trace("RESUME REQUEST STREAM {}", runnableConfig);
 
-                    generator = compiledGraph.streamSnapshots( GraphInput.resume(), runnableConfig);
+                    cacheEntry.generator = cacheEntry.compiledGraph.streamSnapshots( GraphInput.resume(), runnableConfig);
 
                 } else {
 
                     log.trace("dataMap: {}", dataMap);
 
-                    if (compiledGraph == null) {
-                        compiledGraph = instance.graph().compile( compileConfig(instance, persistentConfig)) ;
-                        instance.cache().put(persistentConfig, compiledGraph);
+                    if (cacheEntry == null) {
+                        cacheEntry = new CacheEntry( instance.graph().compile( compileConfig(instance, persistentConfig)) ) ;
+                        instance.cache().put(persistentConfig, cacheEntry);
                     }
 
-                    generator = compiledGraph.streamSnapshots(dataMap, runnableConfig(persistentConfig));
+                    cacheEntry.generator  = cacheEntry.compiledGraph.streamSnapshots(dataMap, runnableConfig(persistentConfig));
                 }
 
-                generator.forEachAsync(s -> {
+                cacheEntry.generator.forEachAsync(s -> {
                             try {
                                 serializeOutput(instance, writer, threadId, s);
                                 writer.println();
@@ -594,14 +651,18 @@ public interface LangGraphStudioServer {
                                 throw new CompletionException(e);
                             }
                         })
-                        .thenAccept(v -> writer.close())
-                        .thenAccept(v -> asyncContext.complete())
-                        .exceptionally(e -> {
-                            log.error("Error streaming", e);
+                        .whenComplete( ( result, ex) -> {
+                            if( ex != null ) {
+                                log.error("graph iteration completed with error", ex);
+                            }
+                            else {
+                                log.info( "graph iteration completed with result {}!", result);
+                            }
                             writer.close();
                             asyncContext.complete();
-                            return null;
-                        });
+                            cacheGeneratorCleanUp( instance, persistentConfig );
+                        })
+                        ;
 
             } catch (Throwable e) {
                 log.error("Error streaming", e);

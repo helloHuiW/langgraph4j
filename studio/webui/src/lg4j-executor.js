@@ -12,7 +12,7 @@ const _DBG = debug( { on: true, topic: 'LG4JExecutor' } )
 
 /**
  * @file
- * @typedef {import('./types.js').ResultData} ResultData * 
+ * @typedef {import('./types.js').ResultData} ResultData
  * @typedef {import('./types.js').EditEvent} EditEvent
  * @typedef {import('./types.js').UpdatedState} UpdatedState
  * @typedef {import('./types.js').Instance} Instance
@@ -87,12 +87,16 @@ export class LG4JExecutorElement extends LitElement {
       display: flex;
       flex-direction: row;
       column-gap: 10px;
+      align-items: center;
     }
 
     .item1 {
       flex-grow: 2;
     }
     .item2 {
+      flex-grow: 2;
+    }
+    .item3 {
       flex-grow: 2;
     }
   `];
@@ -273,6 +277,12 @@ export class LG4JExecutorElement extends LitElement {
             <button id="resume" ?disabled=${!this.#updatedState || this._executing} @click="${this.#callResume}" class="btn btn-secondary item2">
             Resume ${this.#updatedState ? '(from ' + this.#updatedState?.node + ')' : ''}
             </button>
+            <button id="cancel" @click="${this.#callCancel}" ?disabled=${!this._executing} class="btn btn-error item3 text-white" aria-label="Stop">
+              Cancel
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <rect x="5" y="5" width="14" height="14" rx="2" ry="2" />
+              </svg>
+            </button>
           </div>
         </div>
         <!--
@@ -447,6 +457,32 @@ export class LG4JExecutorElement extends LitElement {
     }
   }
 
+  /**
+   * Called when the user clicks the stop button. Dispatches a 'stop' event
+   * and attempts to cancel execution locally.
+   */
+  async #callCancel() {
+    // If not executing, ignore
+    if (!this._executing) return;
+
+    const execResponse = await fetch(`${this.url}/stream/${this.#instanceId}?thread=${this.#selectedThread}&cancel=true`, {
+      method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+    });
+
+    if( !execResponse.ok ) {
+      throw new Error( execResponse.statusText )
+    }
+
+    /** @typedef {CustomEvent<[string,ResultData]>} */
+    const event = new CustomEvent('result',{
+        detail: [ this.#selectedThread, { cancelled:true } ],
+        bubbles: true,
+        composed: true,
+        cancelable: true
+      })
+    this.dispatchEvent( event );
+  }
+
   async #callSubmitAction() {
 
     // Get input as object
@@ -494,15 +530,16 @@ export class LG4JExecutorElement extends LitElement {
       // lastChunk = JSON.parse(chunk);
       lastChunk = detail
 
-      this.dispatchEvent(new CustomEvent('result', {
+      /** @typedef {CustomEvent<[string,ResultData]>} */
+      const event = new CustomEvent('result', {
         detail,
         bubbles: true,
         composed: true,
         cancelable: true
-      }));
-
+      });
+      this.dispatchEvent(event);
     }
-    
+
     return lastChunk
 
   }
