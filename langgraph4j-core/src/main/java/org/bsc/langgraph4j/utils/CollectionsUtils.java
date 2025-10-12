@@ -75,16 +75,14 @@ public final class CollectionsUtils {
      * @param <K>         the type of the keys in the maps
      * @param <V>         the type of the values in the maps
      * @return a new map containing all entries from both maps, collisions result in error
-     * @throws NullPointerException if map1 or map2 is null
+     * @throws NullPointerException if both maps are null
      */
     public static <K, V> Map<K, V> mergeMap( Map<K,V> map1, Map<K,V> map2 ) {
-        requireNonNull(map1, "map1 cannot be null");
-        requireNonNull(map2, "map2 cannot be null");
-        if( map2.isEmpty() ) {
-            return map1;
+        if( map2 == null || map2.isEmpty() ) {
+            return requireNonNull(map1, "map1 cannot be null");
         }
-        if( map1.isEmpty() ) {
-            return map2;
+        if( map1 == null || map1.isEmpty() ) {
+            return requireNonNull(map2, "map2 cannot be null");
         }
 
         return Stream.concat(map1.entrySet().stream(), map2.entrySet().stream() )
@@ -100,32 +98,39 @@ public final class CollectionsUtils {
      * @param <K>         the type of the keys in the maps
      * @param <V>         the type of the values in the maps
      * @return a new map containing all entries from both maps, with collisions resolved by the merge function
-     * @throws NullPointerException if map1, map2, or mergeFunction is null
+     * @throws NullPointerException if both maps are null
      */
     public static <K, V> Map<K, V> mergeMap(Map<K, V> map1, Map<K, V> map2, BinaryOperator<V> mergeFunction) {
-        requireNonNull(map1, "map1 cannot be null");
-        requireNonNull(map2, "map2 cannot be null");
-        if( map2.isEmpty() ) {
-            return map1;
+        if( map2 == null || map2.isEmpty() ) {
+            return requireNonNull(map1, "map1 cannot be null");
         }
-        if( map1.isEmpty() ) {
-            return map2;
+        if( map1 == null || map1.isEmpty() ) {
+            return requireNonNull(map2, "map2 cannot be null");
         }
-        requireNonNull(mergeFunction, "mergeFunction cannot be null");
 
         return Stream.concat(map1.entrySet().stream(), map2.entrySet().stream())
                 .collect(Collectors.toUnmodifiableMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
-                        mergeFunction
+                        requireNonNull(mergeFunction, "mergeFunction cannot be null")
                 ));
     }
 
+    /**
+     * create an entry that accept null value
+     *
+     * @param key – the key represented by this entry
+     * @param value – the value represented by this entry
+     * @return new entry
+     * Type parameters:
+     * <K> – the type of the key
+     * <V> – the type of the value
+     */
     public static <K,V>  Map.Entry<K,V> entryOf( K key, V value ) {
         return new AbstractMap.SimpleImmutableEntry<>(key, value);
     }
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static <T> List<T> listOf(Class<T> clazz) {
         return Collections.emptyList();
     }
