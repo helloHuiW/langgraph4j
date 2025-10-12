@@ -13,7 +13,6 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.tool.ToolCallback;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -21,10 +20,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 /**
  * Represents the core component responsible for executing agent logic.
@@ -87,7 +87,7 @@ public interface AgentExecutor {
                     .schema( State.SCHEMA )
                     .callModelAction( CallModel.of( chatService, streaming ))
                     .executeToolsAction( (state, config ) ->
-                            executeTools(state, toolService))
+                            executeTools(state, toolService).thenApply(Command::update))
                     .shouldContinueEdge(AgentExecutor::shouldContinue)
                     .build();
 
@@ -127,27 +127,24 @@ public interface AgentExecutor {
      * @param state The current state containing necessary information to execute tools.
      * @return A CompletableFuture containing a map with the intermediate steps, if successful. If there is no agent outcome or the tool service execution fails, an appropriate exception will be thrown.
      */
-    private static CompletableFuture<Map<String, Object>> executeTools(State state, SpringAIToolService toolService) {
+    private static CompletableFuture<Command> executeTools(State state, SpringAIToolService toolService) {
         log.trace("executeTools");
-
-        var futureResult = new CompletableFuture<Map<String, Object>>();
 
         var message = state.lastMessage();
 
         if (message.isEmpty()) {
-            futureResult.completeExceptionally(new IllegalArgumentException("no input provided!"));
-        } else if (message.get() instanceof AssistantMessage assistantMessage) {
-            if (assistantMessage.hasToolCalls()) {
-
-                return toolService.executeFunctions(assistantMessage.getToolCalls())
-                        .thenApply(result -> Map.of("messages", result));
-
-            }
-        } else {
-            futureResult.completeExceptionally(new IllegalArgumentException("no AssistantMessage provided!"));
+            return failedFuture(new IllegalArgumentException("no input provided!"));
         }
 
-        return futureResult;
+        if (message.get() instanceof AssistantMessage assistantMessage) {
+            if (assistantMessage.hasToolCalls()) {
+                return toolService.executeFunctions(assistantMessage.getToolCalls(), state.data());
+
+            }
+        }
+
+        return failedFuture(new IllegalArgumentException("no AssistantMessage provided!"));
+
 
     }
 

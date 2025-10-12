@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -83,15 +83,24 @@ public interface AgentExecutorEx {
             return value("next_action");
         }
 
-        private  List<AssistantMessage.ToolCall> toolCallsByName( String actionName ) {
+        public Optional<ToolResponseMessage.ToolResponse> findToolResponseByToolCall(AssistantMessage.ToolCall toolCall ) {
+            return  toolExecutionResults().stream()
+                        .flatMap( r -> r.getResponses().stream() )
+                        .filter( r -> toolCall.id().equals(r.id()) )
+                        .findAny();
+
+        }
+        private Stream<AssistantMessage.ToolCall> toolCallsAsStream() {
             return lastMessage()
                     .filter(m -> MessageType.ASSISTANT == m.getMessageType())
                     .map(AssistantMessage.class::cast)
                     .filter(AssistantMessage::hasToolCalls)
                     .map(AssistantMessage::getToolCalls)
-                    .map(requests -> requests.stream()
-                            .filter(req -> Objects.equals(req.name(), actionName)).toList())
-                    .orElseGet(List::of)
+                    .stream()
+                    .flatMap(Collection::stream)
+                    //.map(requests -> requests.stream().filter(req -> Objects.equals(req.name(), actionName))
+                    //.toList())
+                    //.orElseGet(List::of)
                     ;
         }
     }
@@ -138,7 +147,7 @@ public interface AgentExecutorEx {
                     .toolName( tool -> tool.getToolDefinition().name() )
                     .callModelAction( CallModel.of( chatService, streaming ) )
                     .dispatchToolsAction( dispatchTools( approvals.keySet() ) )
-                    .executeToolFactory( ( toolName ) -> executeTooL( toolService, toolName ) )
+                    .executeToolFactory( ( toolName ) -> executeTool( toolService, toolName ) )
                     .shouldContinueEdge( shouldContinue() )
                     .approvalActionEdge( approvalAction() )
                     .dispatchActionEdge( dispatchAction() )
@@ -189,15 +198,28 @@ public interface AgentExecutorEx {
                         .map( v -> v.replace("approval_", "") )
                         .orElseThrow( () -> new IllegalStateException("no next action found!"));
 
-                var tools = state.toolCallsByName( actionName );
-
-                if(tools.isEmpty())  {
+                if(state.toolCallsAsStream().findAny().isEmpty())  {
                     throw new IllegalStateException("no tool execution request found!");
                 }
 
-                var toolResponses = tools.stream().map( toolCall ->
-                        new ToolResponseMessage.ToolResponse(toolCall.id(), actionName, "execution has been DENIED!")
-                ).toList();
+                var toolResponses = state.toolCallsAsStream()
+                                .map( toolCall -> {
+
+                                    var prevToolResponse = state.findToolResponseByToolCall( toolCall );
+
+                                    if( prevToolResponse.isPresent() ) {
+                                        return prevToolResponse.get();
+                                    }
+                                    if( toolCall.name().equals(actionName) ) {
+                                        return new ToolResponseMessage.ToolResponse(toolCall.id(),
+                                                actionName,
+                                                "execution has been DENIED!");
+                                    }
+                                    return new ToolResponseMessage.ToolResponse(toolCall.id(),
+                                            toolCall.name(),
+                                            "execution has been SUSPENDED, please re-executed it!");
+                                })
+                                .toList();
 
                 var toolResponseMessages = new ToolResponseMessage( toolResponses );
 
@@ -245,18 +267,20 @@ public interface AgentExecutorEx {
 
     }
 
-    static AsyncNodeActionWithConfig<State> executeTooL(SpringAIToolService toolService, String actionName  ) {
+    static AsyncNodeActionWithConfig<State> executeTool(SpringAIToolService toolService, String actionName  ) {
         return ( state, config ) -> {
             log.trace( "ExecuteTool" );
 
-            var toolCalls = state.toolCallsByName(actionName);
+            var toolCalls = state.toolCallsAsStream()
+                                .filter( t -> t.name().equals(actionName))
+                                .toList();
 
             if( toolCalls.isEmpty() ) {
                 return CompletableFuture.failedFuture( new IllegalArgumentException("no tool execution request found!") );
             }
 
-            return toolService.executeFunctions( toolCalls )
-                    .thenApply(result -> Map.of("tool_execution_results", result));
+            return toolService.executeFunctions( toolCalls, state.data(), "tool_execution_results" )
+                    .thenApply( Command::update );
 
         };
 
