@@ -24,7 +24,8 @@ public class ChatModelConfiguration {
         return OllamaChatModel.builder()
                 .ollamaApi(OllamaApi.builder().baseUrl("http://localhost:11434").build())
                 .defaultOptions(OllamaOptions.builder()
-                        .model("qwen2.5:7b")
+                        //.model("qwen2.5:7b")
+                        .model("gpt-oss:20b")
                         .temperature(0.1)
                         .build())
                 .build();

@@ -3,9 +3,7 @@ package org.bsc.langgraph4j.spring.ai;
 import org.bsc.async.AsyncGenerator;
 import org.bsc.async.FlowGenerator;
 import org.bsc.langgraph4j.StateGraph;
-import org.bsc.langgraph4j.action.AsyncNodeAction;
-import org.bsc.langgraph4j.action.EdgeAction;
-import org.bsc.langgraph4j.action.NodeAction;
+import org.bsc.langgraph4j.action.*;
 import org.bsc.langgraph4j.prebuilt.MessagesState;
 import org.bsc.langgraph4j.spring.ai.generators.StreamingChatGenerator;
 import org.bsc.langgraph4j.spring.ai.serializer.std.SpringAIStateSerializer;
@@ -34,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.bsc.langgraph4j.StateGraph.END;
 import static org.bsc.langgraph4j.StateGraph.START;
 import static org.bsc.langgraph4j.action.AsyncEdgeAction.edge_async;
@@ -218,7 +217,7 @@ public class StreamingTestITest {
         var toolService = new SpringAIToolService( List.of(tools) );
 
         // Invoke Tool
-        AsyncNodeAction<State> invokeTool = state -> {
+        AsyncNodeActionWithConfig<State> invokeTool = (state, config) -> {
             log.info("invokeTool:\n{}", state.messages());
 
             var lastMessage = state.lastMessage()
@@ -227,13 +226,13 @@ public class StreamingTestITest {
             if( lastMessage instanceof AssistantMessage assistantMessage ) {
                 if( assistantMessage.hasToolCalls() ) {
 
-                    return toolService.executeFunctions( assistantMessage.getToolCalls() )
-                            .thenApply( result -> Map.of( "messages", result ));
+                    return toolService.executeFunctions( assistantMessage.getToolCalls(), state.data() )
+                            .thenApply(Command::update);
 
                 }
             }
 
-            return CompletableFuture.failedFuture( new IllegalStateException("no AssistantMessage found!"));
+            return failedFuture( new IllegalStateException("no AssistantMessage found!"));
         };
 
         // Define Graph
