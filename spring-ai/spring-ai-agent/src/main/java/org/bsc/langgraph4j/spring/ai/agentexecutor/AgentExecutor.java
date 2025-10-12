@@ -17,7 +17,6 @@ import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -87,8 +86,7 @@ public interface AgentExecutor {
                     .schema( State.SCHEMA )
                     .callModelAction( CallModel.of( chatService, streaming ))
                     .executeToolsAction( (state, config ) ->
-                            executeTools(state, toolService).thenApply(Command::update))
-                    .shouldContinueEdge(AgentExecutor::shouldContinue)
+                            executeTools(state, config, toolService))
                     .build();
 
         }
@@ -127,18 +125,38 @@ public interface AgentExecutor {
      * @param state The current state containing necessary information to execute tools.
      * @return A CompletableFuture containing a map with the intermediate steps, if successful. If there is no agent outcome or the tool service execution fails, an appropriate exception will be thrown.
      */
-    private static CompletableFuture<Command> executeTools(State state, SpringAIToolService toolService) {
+    private static CompletableFuture<Command> executeTools(State state, RunnableConfig config, SpringAIToolService toolService) {
         log.trace("executeTools");
 
-        var message = state.lastMessage();
+        final var message = state.lastMessage();
 
         if (message.isEmpty()) {
             return failedFuture(new IllegalArgumentException("no input provided!"));
         }
 
         if (message.get() instanceof AssistantMessage assistantMessage) {
+
             if (assistantMessage.hasToolCalls()) {
-                return toolService.executeFunctions(assistantMessage.getToolCalls(), state.data());
+
+                return toolService.executeFunctions(assistantMessage.getToolCalls(), state.data())
+                        .thenApply( command -> {
+                            if( command.gotoNodeSafe().isPresent() ) {
+                                return command;
+                            }
+
+                            return new Command(Agent.AGENT_LABEL, command.update() );
+
+                        });
+
+            }
+            else {
+//                var finishReason = message.get().getMetadata().getOrDefault("finishReason", "");
+
+//                if (Objects.equals( Objects.toString(finishReason), "STOP")) {
+//                    return completedFuture(new Command(Agent.END_LABEL ));
+//                }
+
+                return completedFuture(new Command(Agent.END_LABEL ));
 
             }
         }
@@ -148,28 +166,4 @@ public interface AgentExecutor {
 
     }
 
-    /**
-     * Determines whether the game should continue based on the current state.
-     *
-     * @param state The current state of the game.
-     * @return "end" if the game should end, otherwise "continue".
-     */
-    private static CompletableFuture<Command> shouldContinue(State state, RunnableConfig config) {
-
-        var message = state.lastMessage().orElseThrow();
-
-        var finishReason = message.getMetadata().getOrDefault("finishReason", "");
-
-        if (message instanceof AssistantMessage assistantMessage) {
-            if (assistantMessage.hasToolCalls()) {
-                return completedFuture(new Command(Agent.CONTINUE_LABEL ));
-            }
-        }
-
-        if (Objects.equals( Objects.toString(finishReason), "STOP")) {
-            return completedFuture(new Command(Agent.END_LABEL ));
-        }
-
-        return completedFuture(new Command(Agent.END_LABEL ));
-    }
 }
