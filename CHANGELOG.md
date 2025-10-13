@@ -2,6 +2,83 @@
 
 
 
+<!-- "name: v1.7.0-beta2" is a release tag -->
+
+## [v1.7.0-beta2](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta2) (2025-10-13)
+
+### Features
+
+ *  **langchain4j**  make AgentExecutor compliant with action returning a Command ([198963fab8f096b](https://github.com/bsorrentino/langgraph4j/commit/198963fab8f096b77b5923649f9df2b57c1c47ab))
+     > work on [#254](https://github.com/langgraph4j/langgraph4j/issues/254)
+   
+ *  **spring-ai**  make AgentExecutor compliant with action returning a Command ([6912924803c0af9](https://github.com/bsorrentino/langgraph4j/commit/6912924803c0af99e25c7bbab13a2eafd99d6f9a))
+     > work on #254
+   
+ *  **core**  make Agent flow compliant with action returning a Command ([4716df8ee6a58bc](https://github.com/bsorrentino/langgraph4j/commit/4716df8ee6a58bcaa8a2e452c4b7b835c6baa461))
+     > work on #254
+   
+ *  **spring-ai**  allow return command from tool execution ([8ecfd819c1a8233](https://github.com/bsorrentino/langgraph4j/commit/8ecfd819c1a82338ca3e90cb3437e4db95ed0938))
+     > work on #254
+   
+ *  **studio-ui**  integrate cancellation request ([f4f50cbb7102724](https://github.com/bsorrentino/langgraph4j/commit/f4f50cbb71027243b2fe8d071ca83c5ba8eda53d))
+   
+ *  **studio**  integrate cancellation request ([80b7c389cc92def](https://github.com/bsorrentino/langgraph4j/commit/80b7c389cc92def462d9eb19d1b2e343785d9d79))
+   
+
+
+### Documentation
+
+ -  bump to version 1.7.0-beta2 ([d4741e86f45e287](https://github.com/bsorrentino/langgraph4j/commit/d4741e86f45e2879c2a7409a0cdf8db538f60ff5))
+
+ -  bump to dev version 1.7-SNAPSHOT ([f9f4563c5099013](https://github.com/bsorrentino/langgraph4j/commit/f9f4563c5099013d8c9a402b25ef89eb2fc0c8db))
+
+ -  bump to dev version 1.7-SNAPSHOT ([e24c578688b1420](https://github.com/bsorrentino/langgraph4j/commit/e24c578688b1420573665c48c4570ca53dd0aa57))
+
+ -  bump to dev version 1.7-SNAPSHOT ([0c9b4d7aa3fd873](https://github.com/bsorrentino/langgraph4j/commit/0c9b4d7aa3fd873c2edfdd114bd30336586ebbb9))
+
+ -  update changelog ([cefc802b1a39d30](https://github.com/bsorrentino/langgraph4j/commit/cefc802b1a39d301e0d00af1019fd4869d355b92))
+
+
+### Refactor
+
+ -  introduce ReactAgent as more generic of AgentExecutor ([a8de10a5d52ff28](https://github.com/bsorrentino/langgraph4j/commit/a8de10a5d52ff28901c2ae1f3e1ed6dfddc4bb1c))
+    > work on #254
+
+ -  move ToolResponseBuilder to the core ([7f790ac5b52f275](https://github.com/bsorrentino/langgraph4j/commit/7f790ac5b52f275b54d9e07f143e1ddb279bfe58))
+    > work on #254
+
+ -  **core/Command**  Refactoring the Command class to allow gotoNode to be null if the update is not ([2f2538bb655e5a0](https://github.com/bsorrentino/langgraph4j/commit/2f2538bb655e5a088357437d5ddcf881d2da5022))
+    > - Added static emptyCommand() method.
+ > work on #254
+
+ -  **CollectionsUtils**  Refactor error handling and logic in mergeMap methods ([f7e2c8b90328666](https://github.com/bsorrentino/langgraph4j/commit/f7e2c8b90328666a7579e4ec7a7c7a23502b8ee7))
+    > - Null checks and error handling for the mergeMap methods. It ensures that only one map is returned if the other is null or empty.
+
+ -  **CollectionsUtils**  Refactor last and mergeMap ([a78b8bad49201bb](https://github.com/bsorrentino/langgraph4j/commit/a78b8bad49201bb7afa43d2d9e212e12cc29a624))
+    > Removed deprecated &#x27;last&#x27; method, optimized &#x27;mergeMap&#x27; implementation with empty check.
+
+
+### ALM 
+
+ -  bump to version 1.7.0-beta2 ([9e34cc697011ab2](https://github.com/bsorrentino/langgraph4j/commit/9e34cc697011ab2356f911d2760deb4dc97c07da))
+   
+ -  bump to spring-ai version 1.0.3 ([6331a5ba61518a7](https://github.com/bsorrentino/langgraph4j/commit/6331a5ba61518a73b0221c4c155fa87361e9d4c3))
+   
+ -  **studio-ui**  deploy frontend in each studio distribution ([472596a75307e03](https://github.com/bsorrentino/langgraph4j/commit/472596a75307e03a3510bcfabffe28db36e0db1e))
+   
+ -  bump to version 1.7-SNAPSHOT ([af369766014662c](https://github.com/bsorrentino/langgraph4j/commit/af369766014662ce3250224b6d7b0c363b86e4e3))
+   
+
+### Test 
+
+ -  **spring-ai**  test return command from tool execution ([aee44c77f211f4a](https://github.com/bsorrentino/langgraph4j/commit/aee44c77f211f4a8d36ff984579c647ca6d52de3))
+    > work on #254
+
+
+
+
+
+
 <!-- "name: v1.7.0-beta1" is a release tag -->
 
 ## [v1.7.0-beta1](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta1) (2025-10-04)
