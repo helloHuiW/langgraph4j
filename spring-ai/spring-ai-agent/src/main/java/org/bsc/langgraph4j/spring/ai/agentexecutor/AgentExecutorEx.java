@@ -5,6 +5,8 @@ import org.bsc.langgraph4j.StateGraph;
 import org.bsc.langgraph4j.action.*;
 import org.bsc.langgraph4j.agent.AgentEx;
 import org.bsc.langgraph4j.prebuilt.MessagesState;
+import org.bsc.langgraph4j.spring.ai.agent.CallModelAction;
+import org.bsc.langgraph4j.spring.ai.agent.ReactAgentBuilder;
 import org.bsc.langgraph4j.spring.ai.serializer.std.SpringAIStateSerializer;
 import org.bsc.langgraph4j.spring.ai.tool.SpringAIToolService;
 import org.bsc.langgraph4j.state.AgentState;
@@ -26,7 +28,6 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.bsc.langgraph4j.state.AgentState.MARK_FOR_REMOVAL;
 import static org.bsc.langgraph4j.state.AgentState.MARK_FOR_RESET;
-import static org.bsc.langgraph4j.utils.CollectionsUtils.mapOf;
 import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 /**
@@ -108,7 +109,7 @@ public interface AgentExecutorEx {
     /**
      * Class responsible for building a state graph.
      */
-    class Builder extends AgentExecutorBuilder<Builder, State> {
+    class Builder extends ReactAgentBuilder<Builder, State> {
 
         private final Map<String,AgentEx.ApprovalNodeAction<Message,State>> approvals = new LinkedHashMap<>();
 
@@ -130,7 +131,7 @@ public interface AgentExecutorEx {
          * @return A configured StateGraph object.
          * @throws GraphStateException If there is an issue with building the graph state.
          */
-        public StateGraph<State> build( Function<AgentExecutorBuilder<?,?>, AgentExecutor.ChatService> chatServiceFactory ) throws GraphStateException {
+        public StateGraph<State> build(Function<ReactAgentBuilder<?, ?>, org.bsc.langgraph4j.spring.ai.agent.ReactAgent.ChatService> chatServiceFactory ) throws GraphStateException {
 
             if (stateSerializer == null) {
                 stateSerializer = new SpringAIStateSerializer<>(AgentExecutorEx.State::new);
@@ -141,11 +142,13 @@ public interface AgentExecutorEx {
             // verify approval
             final var toolService = new SpringAIToolService(tools());
 
+            final var callModelAction = new CallModelAction<State>( chatService, streaming );
+
             return AgentEx.<Message, State, ToolCallback>builder()
                     .stateSerializer( stateSerializer )
                     .schema( State.SCHEMA )
                     .toolName( tool -> tool.getToolDefinition().name() )
-                    .callModelAction( CallModel.of( chatService, streaming ) )
+                    .callModelAction( callModelAction )
                     .dispatchToolsAction( dispatchTools( approvals.keySet() ) )
                     .executeToolFactory( ( toolName ) -> executeTool( toolService, toolName ) )
                     .shouldContinueEdge( shouldContinue() )

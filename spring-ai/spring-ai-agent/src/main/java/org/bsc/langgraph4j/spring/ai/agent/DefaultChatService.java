@@ -1,14 +1,14 @@
-package org.bsc.langgraph4j.spring.ai.agentexecutor;
+package org.bsc.langgraph4j.spring.ai.agent;
 
-import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.model.tool.ToolCallingChatOptions;
 
 import java.util.Objects;
 
-class DefaultChatService implements AgentExecutor.ChatService {
+class DefaultChatService implements ReactAgent.ChatService {
     final ChatClient chatClient;
 
-    public DefaultChatService( AgentExecutorBuilder<?,?> builder ) {
+    public DefaultChatService(ReactAgentBuilder<?,?> builder ) {
         Objects.requireNonNull(builder.chatModel,"chatModel cannot be null!");
         var toolOptions = ToolCallingChatOptions.builder()
                 .internalToolExecutionEnabled(false) // MANDATORY: Disable automatic tool execution
