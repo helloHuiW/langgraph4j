@@ -1,5 +1,6 @@
 package org.bsc.langgraph4j.spring.ai.tool;
 
+import org.bsc.langgraph4j.action.Command;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.model.ToolContext;
@@ -7,12 +8,21 @@ import org.springframework.ai.tool.ToolCallback;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 /**
  * Service class responsible for managing tools and their callbacks.
  */
 public class SpringAIToolService {
 
+    protected static final String COMMAND_RESULT = "AtomicReference<Command>";
     private final List<ToolCallback> agentFunctions;
 
     public SpringAIToolService(List<ToolCallback> agentFunctions ) {
@@ -35,45 +45,99 @@ public class SpringAIToolService {
      * @return An optional containing the function callback wrapper, or an empty optional if not found.
      */
     public Optional<ToolCallback> agentFunction( String name ) {
-        Objects.requireNonNull( name, "name cannot be null" );
+        requireNonNull( name, "name cannot be null" );
 
         return this.agentFunctions.stream()
                 .filter( tool -> Objects.equals(tool.getToolDefinition().name(), name ))
                 .findFirst();
     }
 
-    public CompletableFuture<ToolResponseMessage> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextMap) {
+    /**
+     * Executes a list of tool calls.
+     *
+     * @param toolCalls The list of tool calls to execute.
+     * @param toolContextData The tool context data.
+     * @param resultPropertyName name of the state property where ste the tool response message
+     * @return A completable future that will be completed with the tool response message.
+     */
+    public CompletableFuture<Command> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextData, String resultPropertyName) {
+        if( resultPropertyName == null  ) {
+            return failedFuture(new NullPointerException("propertyName cannot be null"));
+        }
+        if( resultPropertyName.isEmpty()  ) {
+            return failedFuture(new IllegalArgumentException("propertyName cannot be empty") );
+        }
 
-        CompletableFuture<ToolResponseMessage> result = new CompletableFuture<>();
+        var toolResponses = new ArrayList<ToolResponseMessage.ToolResponse>(toolCalls.size());
 
-        var toolContext =  new ToolContext( toolContextMap );
-
-        var responses = new ArrayList<ToolResponseMessage.ToolResponse>();
+        Map<String,Object> update = Map.of();
+        String gotoNode = null;
 
         for( var toolCall : toolCalls ) {
 
-            var functionName = toolCall.name();
+            var toolCallback = agentFunction( toolCall.name() );
 
-            var functionCallback = agentFunction( functionName );
-
-            if( functionCallback.isEmpty() ) {
-                result.completeExceptionally( new IllegalStateException("No function callback found for function name: " + functionName) );
-                return result;
+            if( toolCallback.isEmpty() ) {
+                return failedFuture( new IllegalStateException( format("No tool callback found for name: %s", toolCall.name())) );
             }
 
-            var functionResponse = functionCallback.get().call(toolCall.arguments(), toolContext );
-            var toolResponse = new ToolResponseMessage.ToolResponse(toolCall.id(), functionName, functionResponse);
+            var scopedToolTaskResult = scopedToolCall( toolCallback.get(), toolCall, toolContextData );
+            var command = scopedToolTaskResult.command();
 
-            responses.add( toolResponse );
+            if( command.gotoNodeSafe().isPresent() ) {
+                if( gotoNode != null ) {
+                    return failedFuture( new IllegalStateException( format("Multiple nodes target provided! tried to set %s when %s was already present : ",
+                                                                        command.gotoNode(),
+                                                                        gotoNode) ));
+                }
+                gotoNode = command.gotoNode();
+            }
+
+            update = mergeMap( update, command.update(), (v1,v2) -> v2  );
+
+            toolResponses.add( scopedToolTaskResult.toolResponse() );
 
         }
-        result.complete( new ToolResponseMessage( responses ) );
 
-        return result;
+        update = mergeMap( update, Map.of(resultPropertyName, new ToolResponseMessage( toolResponses )) );
+
+        return completedFuture( new Command( gotoNode, update  ) );
     }
 
-    public CompletableFuture<ToolResponseMessage> executeFunctions(List<AssistantMessage.ToolCall> toolCalls) {
-        return executeFunctions( toolCalls, Map.of() );
+
+    public CompletableFuture<Command> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextData) {
+        return executeFunctions( toolCalls, toolContextData, "messages" );
+    }
+
+    private record ScopedToolCallResult(
+        ToolResponseMessage.ToolResponse toolResponse,
+        Command command
+    ){
+        public Command command() {
+            return ofNullable(command).orElseGet(Command::emptyCommand);
+        }
+
+        ScopedToolCallResult {
+            requireNonNull( toolResponse, "response cannot be null");
+        }
+    }
+
+    private ScopedToolCallResult scopedToolCall(ToolCallback toolCallback,
+                                                AssistantMessage.ToolCall toolCall,
+                                                Map<String,Object> toolContextData  )
+    {
+        final var scopedCommandResult = new AtomicReference<Command>();
+        final var context = mergeMap(
+                requireNonNull(toolContextData, "state cannot be null!"),
+                Map.of(COMMAND_RESULT, scopedCommandResult));
+
+        final var toolContext = new ToolContext( context );
+
+        var toolResult = toolCallback.call(toolCall.arguments(), toolContext );
+
+        var toolResponse = new ToolResponseMessage.ToolResponse(toolCall.id(), toolCall.name(), toolResult);
+
+        return new ScopedToolCallResult( toolResponse, scopedCommandResult.get() );
     }
 
 }

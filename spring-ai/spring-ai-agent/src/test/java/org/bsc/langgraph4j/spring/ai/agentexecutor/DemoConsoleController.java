@@ -50,17 +50,22 @@ public class DemoConsoleController implements CommandLineRunner {
 
         var console = System.console();
 
+        var streaming = false;
+
         var userMessage = """
                 perform test twice with message 'this is a test' and reports their results and also number of current active threads
                 """;
+        runAgent( userMessage, streaming, console  );
 
-        var streaming = true;
+        var userMessageWitCancellation = """
+                perform test twice with message 'this is a test' and reports their results and also number of current active threads
+                """;
+        runAgentWithCancellation(userMessageWitCancellation, streaming, console);
 
-        runAgentWithCancellation(userMessage, streaming, console);
-
-        // runAgent( userMessage, streaming, console  );
-
-        // runAgentWithApproval( userMessage, streaming, console  );
+        var userMessageWithApproval = """
+                get number of current active threads and perform test with message 'this is a test'
+                """;
+        runAgentWithApproval( userMessageWithApproval, streaming, console  );
     }
 
     public void runAgentWithApproval(String userMessage, boolean streaming, java.io.Console console) throws Exception {
@@ -104,8 +109,8 @@ public class DemoConsoleController implements CommandLineRunner {
             if (output.isEND()) {
                 console.format("result: %s\n",
                         output.state().lastMessage()
-                                .map(AssistantMessage.class::cast)
-                                .map(AssistantMessage::getText)
+                                //.map(AssistantMessage.class::cast)
+                                //.map(AssistantMessage::getText)
                                 .orElseThrow());
                 break;
 
@@ -220,9 +225,9 @@ public class DemoConsoleController implements CommandLineRunner {
         var generator = agent.stream(input, runnableConfig);
 
 
-        CompletableFuture.runAsync(() -> {
+        var future = CompletableFuture.runAsync(() -> {
             try {
-                Thread.sleep(3500);
+                Thread.sleep(100);
                 generator.cancel(true);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -240,6 +245,8 @@ public class DemoConsoleController implements CommandLineRunner {
                 .reduce((a, b) -> b)
                 .orElseThrow();
 
+
+        future.get();
 
         if (!generator.isCancelled()) {
             console.format("generator lastState: %s\n",

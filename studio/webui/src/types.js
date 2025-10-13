@@ -26,6 +26,7 @@
  * @property {string|undefined} subgraphNode - subgraph id 
  * @property {string} [checkpoint] - checkpoint id.
  * @property {Record<string,any>} state - state
+ * @property {boolean} [cancelled] - true if the execution was cancelled.
  */
 
 /**
