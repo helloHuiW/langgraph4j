@@ -1,9 +1,11 @@
-package org.bsc.langgraph4j.spring.ai.agentexecutor;
+package org.bsc.langgraph4j.spring.ai.agent;
 
 import org.bsc.langgraph4j.GraphStateException;
 import org.bsc.langgraph4j.StateGraph;
+import org.bsc.langgraph4j.prebuilt.MessagesState;
 import org.bsc.langgraph4j.serializer.StateSerializer;
-import org.bsc.langgraph4j.state.AgentState;
+import org.bsc.langgraph4j.state.Channel;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
@@ -11,20 +13,21 @@ import org.springframework.ai.tool.ToolCallbackProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-public abstract class AgentExecutorBuilder<B extends AgentExecutorBuilder<B,State>, State extends AgentState> {
+public abstract class ReactAgentBuilder<B extends ReactAgentBuilder<B,State>, State extends MessagesState<Message>> {
 
     protected StateSerializer<State> stateSerializer;
     protected ChatModel chatModel;
     protected String systemMessage;
     protected boolean streaming = false;
     protected final List<ToolCallback> tools = new ArrayList<>();
+    protected Map<String, Channel<?>> schema;
 
     public Optional<String> systemMessage() {
         return ofNullable(systemMessage);
@@ -38,6 +41,12 @@ public abstract class AgentExecutorBuilder<B extends AgentExecutorBuilder<B,Stat
     protected B result() {
         return (B)this;
     }
+
+    public B schema(Map<String, Channel<?>> schema) {
+        this.schema = schema;
+        return result();
+    }
+
     /**
      * Sets the state serializer for the graph builder.
      *
@@ -57,11 +66,6 @@ public abstract class AgentExecutorBuilder<B extends AgentExecutorBuilder<B,Stat
 
     public B chatModel(ChatModel chatModel ) {
         return chatModel( chatModel, false );
-    }
-
-    @Deprecated(forRemoval = true)
-    public B streamingChatModel(ChatModel chatModel) {
-        return chatModel( chatModel, true );
     }
 
     public B defaultSystem(String systemMessage) {
@@ -96,10 +100,11 @@ public abstract class AgentExecutorBuilder<B extends AgentExecutorBuilder<B,Stat
     }
 
 
-    public abstract StateGraph<State> build( Function<AgentExecutorBuilder<?,?>, AgentExecutor.ChatService> chatServiceFactory ) throws GraphStateException;
+    public abstract StateGraph<State> build(Function<ReactAgentBuilder<?,?>, ReactAgent.ChatService> chatServiceFactory ) throws GraphStateException;
 
     public final StateGraph<State> build() throws GraphStateException {
         return build(DefaultChatService::new);
     }
 
 }
+

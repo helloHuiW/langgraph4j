@@ -4,7 +4,6 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.*;
 import org.bsc.langgraph4j.GraphStateException;
-import org.bsc.langgraph4j.RunnableConfig;
 import org.bsc.langgraph4j.StateGraph;
 import org.bsc.langgraph4j.action.*;
 import org.bsc.langgraph4j.agent.Agent;
@@ -236,7 +235,7 @@ public interface AgentExecutorEx {
         return AsyncCommandAction.command_async( (state, config ) ->
                 state.finalResponse()
                         .map(res -> new Command(Agent.END_LABEL))
-                        .orElse(new Command(Agent.CONTINUE_LABEL) ));
+                        .orElse(new Command(Agent.AGENT_LABEL)) );
     }
 
     private static AsyncCommandAction<State> dispatchAction() {
