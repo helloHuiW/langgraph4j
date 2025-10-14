@@ -15,6 +15,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.bsc.langgraph4j.agent.ToolResponseBuilder.COMMAND_RESULT;
 import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 /**
@@ -22,7 +23,6 @@ import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
  */
 public class SpringAIToolService {
 
-    protected static final String COMMAND_RESULT = "AtomicReference<Command>";
     private final List<ToolCallback> agentFunctions;
 
     public SpringAIToolService(List<ToolCallback> agentFunctions ) {
@@ -129,7 +129,8 @@ public class SpringAIToolService {
         final var scopedCommandResult = new AtomicReference<Command>();
         final var context = mergeMap(
                 requireNonNull(toolContextData, "state cannot be null!"),
-                Map.of(COMMAND_RESULT, scopedCommandResult));
+                Map.of(COMMAND_RESULT, scopedCommandResult),
+                (v1, v2) -> v2);
 
         final var toolContext = new ToolContext( context );
 
