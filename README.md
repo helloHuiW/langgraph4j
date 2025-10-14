@@ -18,7 +18,9 @@ LangGraph for Java. A library for building stateful, multi-agents applications w
 ‼️ **Note:**
 > The miminum supported version is the `Java 17` 
 
-----
+## Star History
+
+[![Star History Chart](https://starchart.cc/langgraph4j/langgraph4j.svg)](https://starchart.cc/langgraph4j/langgraph4j)
 
 # Getting Started
 
@@ -433,10 +435,6 @@ Now that you have a basic understanding of LangGraph4j, here's how you can conti
 *   **Experiment!** The best way to learn is by doing. Try modifying the examples or building your own simple graphs.
 
 We hope this guide helps you get started with LangGraph4j. Happy building!
-
-## Star History
-
-[![Star History Chart](https://starchart.cc/langgraph4j/langgraph4j.svg)](https://starchart.cc/langgraph4j/langgraph4j)
 
 # References
 
