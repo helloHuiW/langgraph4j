@@ -2,6 +2,70 @@
 
 
 
+<!-- "name: v1.7.0-beta3" is a release tag -->
+
+## [v1.7.0-beta3](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta3) (2025-10-14)
+
+### Features
+
+ *  **langchain4j**  allow return command from tool execution ([ca7a8c4793d3aae](https://github.com/bsorrentino/langgraph4j/commit/ca7a8c4793d3aae5f28a710c303779c96dd5979c))
+     > work on #254
+   
+
+### Bug Fixes
+
+ -  **core/CompiledGraph**  reset checkpoint ID  to provided runnable config ([83b3ae482a1c19d](https://github.com/bsorrentino/langgraph4j/commit/83b3ae482a1c19d9402670332a41f0f266a13822))
+
+ -  **core/ToolResponseBuilder**  rewrite the COMMAND_RESULT's value if it is already presente in context ([f86ccabf7dd9e46](https://github.com/bsorrentino/langgraph4j/commit/f86ccabf7dd9e46c1fbba57fc25354c5a2ce2b81))
+
+
+### Documentation
+
+ -  update readme ([6677d89f815ff89](https://github.com/bsorrentino/langgraph4j/commit/6677d89f815ff89e9170a8d7df8259de4d43c600))
+
+ -  bump to release 1.7.0-beta3 ([02e567184f8c419](https://github.com/bsorrentino/langgraph4j/commit/02e567184f8c419288c9b608279d4db1e9aa1373))
+
+ -  bump to dev version 1.7-SNAPSHOT ([677e350630a0a86](https://github.com/bsorrentino/langgraph4j/commit/677e350630a0a8675671ee0dd5abe249df4adc3c))
+
+ -  update changelog ([a0a853fa46ef50a](https://github.com/bsorrentino/langgraph4j/commit/a0a853fa46ef50a3660723800f300d5151202de2))
+
+
+### Refactor
+
+ -  **SpringAIToolService**  Renamed 'resultPropertyName' to 'propertyNameToUpdate' to clearly indicate its purpose. ([e24e29b76875a6d](https://github.com/bsorrentino/langgraph4j/commit/e24e29b76875a6d58babb392fb1dad1839ec1b2e))
+   
+ -  **langchain4j**  allow return command from tool execution ([d283856c0637b9a](https://github.com/bsorrentino/langgraph4j/commit/d283856c0637b9a84ac7283618fac86937cb8a46))
+    > work on #254
+
+ -  **spring-ai**  update COMMAND_RESULT constant orign ([2ab5eb16fdd8cf0](https://github.com/bsorrentino/langgraph4j/commit/2ab5eb16fdd8cf09538b7aa9a0a888aedab51dd1))
+   
+ -  **core/CompiledGraph**  Remove hard-coded maxIterations and use CompileConfig.recursionLimit() instead ([52ca0145ae001c5](https://github.com/bsorrentino/langgraph4j/commit/52ca0145ae001c5c313a4dfed57f8395b1353843))
+    > - Deprecated: setMaxIterations(int)
+
+ -  **core/CompileConfig**  Added a new property `recursionLimit`. ([d25a1db56e95269](https://github.com/bsorrentino/langgraph4j/commit/d25a1db56e952696afaf4e3dfeccc7c0bd2a0e1a))
+    > - remove  Deprecated methods for retrieving interrupts .
+
+ -  **core/ToolResponseBuilder**  better describe command building methods ([d28901ec02afc00](https://github.com/bsorrentino/langgraph4j/commit/d28901ec02afc00c649b85a8edb1ff746ddafb1e))
+    > - The &#x60;build&#x60; method has been deprecated in favor of more descriptive alternatives such as &#x60;buildAndReturn&#x60; and &#x60;buildAndSet&#x60;,.
+
+
+### ALM 
+
+ -  bump to release 1.7.0-beta3 ([ecf429217896dc3](https://github.com/bsorrentino/langgraph4j/commit/ecf429217896dc38aaf1d0fc6a7788ef7bdea536))
+   
+ -  **langchain4j**  remove gson dependency ([16a9c5b9df98a0f](https://github.com/bsorrentino/langgraph4j/commit/16a9c5b9df98a0f7affaa12693bdcd41aaad60f8))
+   
+
+### Test 
+
+ -  **langchain4j**  test return command from tool execution ([56306a1c68fe516](https://github.com/bsorrentino/langgraph4j/commit/56306a1c68fe516cf64391281dd80eacee162dca))
+    > work on #254
+
+
+
+
+
+
 <!-- "name: v1.7.0-beta2" is a release tag -->
 
 ## [v1.7.0-beta2](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta2) (2025-10-13)
