@@ -4,14 +4,22 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.service.tool.DefaultToolExecutor;
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.tool.ToolExecutor;
+import org.bsc.langgraph4j.action.Command;
 
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static dev.langchain4j.agent.tool.ToolSpecifications.toolSpecificationFrom;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.bsc.langgraph4j.agent.ToolResponseBuilder.COMMAND_RESULT;
+import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 public final  class LC4jToolService {
 
@@ -104,68 +112,90 @@ public final  class LC4jToolService {
         return this.toolMap.keySet().stream().toList();
     }
 
-    /**
-     * Executes the first matching tool
-     *
-     * @param request  the request to execute
-     * @param memoryId the memory id to pass to the tool
-     * @return the result of the tool
-     */
-    public Optional<ToolExecutionResultMessage> execute(ToolExecutionRequest request, Object memoryId) {
-        Objects.requireNonNull(request, "request cannot be null");
 
-        log.trace("execute: {}", request.name());
+    public CompletableFuture<Command> execute(List<ToolExecutionRequest> requests, InvocationContext context, String propertyNameToUpdate ) {
+        requireNonNull(requests, "requests cannot be null");
+        requireNonNull(propertyNameToUpdate, "propertyNameToUpdate cannot be null");
+        requireNonNull( context, "context cannot be null");
+
+        log.trace("execute: {}", requests.stream().map( ToolExecutionRequest::name ).toList() );
+
+        var toolResponses = new ArrayList<ToolExecutionResultMessage>(requests.size());
+        Map<String,Object> update = Map.of();
+        String gotoNode = null;
+
+        for( var request : requests ) {
+
+            var optionalResult = scopedToolCall(request, context);
+
+            if (optionalResult.isEmpty()) {
+                log.warn("tool '{}' not found!", request.name());
+                continue;
+            }
+
+            var command = optionalResult.get().command();
+
+            if (command.gotoNodeSafe().isPresent()) {
+                if (gotoNode != null) {
+                    return failedFuture(new IllegalStateException(format("Multiple nodes target provided! tried to set %s when %s was already present : ",
+                            command.gotoNode(),
+                            gotoNode)));
+                }
+                gotoNode = command.gotoNode();
+            }
+
+            update = mergeMap( update, command.update(), (v1,v2) -> v2  );
+
+            toolResponses.add( optionalResult.get().toolResultMessage() );
+
+        }
+
+        update = mergeMap( update, Map.of(propertyNameToUpdate, toolResponses ) );
+
+        return completedFuture( new Command( gotoNode, update  ) );
+    }
+
+    private record ScopedToolCallResult(
+            ToolExecutionResultMessage toolResultMessage,
+            Command command
+    ){
+        public Command command() {
+            return ofNullable(command).orElseGet(Command::emptyCommand);
+        }
+
+        ScopedToolCallResult {
+            requireNonNull( toolResultMessage, "response cannot be null");
+        }
+    }
+
+    private Optional<ScopedToolCallResult> scopedToolCall(ToolExecutionRequest request,
+                                                InvocationContext toolContext )
+    {
+        final var scopedCommandResult = new AtomicReference<Command>();
 
         return toolMap.entrySet().stream()
-                .filter(e -> Objects.equals(e.getKey().name(),request.name()))
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .map(e -> {
-                    String value = e.execute(request, memoryId);
-                    return new ToolExecutionResultMessage(request.id(), request.name(), value);
-                })
-                ;
+            .filter(e -> Objects.equals(e.getKey().name(),request.name()))
+            .map(Map.Entry::getValue)
+            .findFirst()
+            .map(e -> {
+
+                final var contextMapData = mergeMap(
+                        ofNullable(toolContext.invocationParameters())
+                                .map( InvocationParameters::asMap )
+                                .orElseGet(Map::of),
+                        Map.of(COMMAND_RESULT, scopedCommandResult),
+                        (v1, v2) -> v2);
+
+                final var newToolContext = InvocationContext.builder()
+                        .chatMemoryId(toolContext.chatMemoryId())
+                        .invocationParameters( InvocationParameters.from(contextMapData) )
+                        .build();
+
+                return e.executeWithContext(request, newToolContext);
+            })
+            .map( result -> new ToolExecutionResultMessage(request.id(), request.name(), result.resultText()) )
+            .map( toolResultMessage -> new ScopedToolCallResult( toolResultMessage, scopedCommandResult.get() ) );
     }
 
-    /**
-     * Executes the first matching tool
-     *
-     * @param requests the requests to execute
-     * @param memoryId the memory id to pass to the tool
-     * @return the result of the tool
-     */
-    public Optional<ToolExecutionResultMessage> execute(Collection<ToolExecutionRequest> requests, Object memoryId) {
-        Objects.requireNonNull(requests, "requests cannot be null");
-
-        for (ToolExecutionRequest request : requests) {
-
-            Optional<ToolExecutionResultMessage> result = execute(request, memoryId);
-
-            if (result.isPresent()) {
-                return result;
-            }
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Executes the first matching tool
-     *
-     * @param request the request to execute
-     * @return the result of the tool
-     */
-    public Optional<ToolExecutionResultMessage> execute(ToolExecutionRequest request) {
-        return execute(request, null);
-    }
-
-    /**
-     * Executes the first matching tool
-     *
-     * @param requests the requests to execute
-     * @return the result of the tool
-     */
-    public Optional<ToolExecutionResultMessage> execute(Collection<ToolExecutionRequest> requests) {
-        return execute(requests, null);
-    }
 
 }
