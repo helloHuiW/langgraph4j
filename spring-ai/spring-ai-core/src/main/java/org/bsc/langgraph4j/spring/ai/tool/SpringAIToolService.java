@@ -15,6 +15,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.bsc.langgraph4j.agent.ToolResponseBuilder.COMMAND_RESULT;
 import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
 
 /**
@@ -22,7 +23,6 @@ import static org.bsc.langgraph4j.utils.CollectionsUtils.mergeMap;
  */
 public class SpringAIToolService {
 
-    protected static final String COMMAND_RESULT = "AtomicReference<Command>";
     private final List<ToolCallback> agentFunctions;
 
     public SpringAIToolService(List<ToolCallback> agentFunctions ) {
@@ -57,14 +57,14 @@ public class SpringAIToolService {
      *
      * @param toolCalls The list of tool calls to execute.
      * @param toolContextData The tool context data.
-     * @param resultPropertyName name of the state property where ste the tool response message
+     * @param propertyNameToUpdate name of the state property where ste the tool response message
      * @return A completable future that will be completed with the tool response message.
      */
-    public CompletableFuture<Command> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextData, String resultPropertyName) {
-        if( resultPropertyName == null  ) {
+    public CompletableFuture<Command> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextData, String propertyNameToUpdate) {
+        if( propertyNameToUpdate == null  ) {
             return failedFuture(new NullPointerException("propertyName cannot be null"));
         }
-        if( resultPropertyName.isEmpty()  ) {
+        if( propertyNameToUpdate.isEmpty()  ) {
             return failedFuture(new IllegalArgumentException("propertyName cannot be empty") );
         }
 
@@ -99,7 +99,7 @@ public class SpringAIToolService {
 
         }
 
-        update = mergeMap( update, Map.of(resultPropertyName, new ToolResponseMessage( toolResponses )) );
+        update = mergeMap( update, Map.of(propertyNameToUpdate, new ToolResponseMessage( toolResponses )) );
 
         return completedFuture( new Command( gotoNode, update  ) );
     }
@@ -129,7 +129,8 @@ public class SpringAIToolService {
         final var scopedCommandResult = new AtomicReference<Command>();
         final var context = mergeMap(
                 requireNonNull(toolContextData, "state cannot be null!"),
-                Map.of(COMMAND_RESULT, scopedCommandResult));
+                Map.of(COMMAND_RESULT, scopedCommandResult),
+                (v1, v2) -> v2);
 
         final var toolContext = new ToolContext( context );
 

@@ -80,7 +80,7 @@ public class CompiledGraph<State extends AgentState> {
 
     private final ProcessedNodesEdgesAndConfig<State> processedData;
 
-    private int maxIterations = 25;
+    private int maxIterations;
 
     public final CompileConfig compileConfig;
 
@@ -90,6 +90,9 @@ public class CompiledGraph<State extends AgentState> {
      * @param stateGraph the StateGraph to be used in this CompiledGraph
      */
     protected CompiledGraph(StateGraph<State> stateGraph, CompileConfig compileConfig ) throws GraphStateException {
+
+        maxIterations = compileConfig.recursionLimit();
+
         this.stateGraph = stateGraph;
 
         this.processedData = ProcessedNodesEdgesAndConfig.process( stateGraph, compileConfig );
@@ -279,7 +282,9 @@ public class CompiledGraph<State extends AgentState> {
      *
      * @param maxIterations the maximum number of iterations
      * @throws IllegalArgumentException if maxIterations is less than or equal to 0
+     * @deprecated use CompileConfig.recursionLimit() instead
      */
+    @Deprecated(forRemoval = true)
     public void setMaxIterations(int maxIterations) {
         if( maxIterations <= 0 ) {
             throw new IllegalArgumentException("maxIterations must be > 0!");
@@ -655,7 +660,7 @@ public class CompiledGraph<State extends AgentState> {
                 this.context = new Context();
                 //this.nextNodeId = null;
                 //this.currentNodeId = START;
-                this.config = config;
+                this.config = config.withCheckPointId( null );
             }
         }
 

@@ -5,9 +5,13 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import org.bsc.langgraph4j.action.AsyncNodeAction;
+import org.bsc.langgraph4j.action.Command;
 import org.bsc.langgraph4j.action.EdgeAction;
 import org.bsc.langgraph4j.action.NodeAction;
 import org.bsc.langgraph4j.langchain4j.generators.StreamingChatGenerator;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.bsc.langgraph4j.StateGraph.END;
 import static org.bsc.langgraph4j.StateGraph.START;
@@ -113,7 +118,7 @@ public class StreamingTestITest {
         };
 
         // Invoke Tool
-        NodeAction<MessagesState<ChatMessage>> invokeTool = state -> {
+        AsyncNodeAction<MessagesState<ChatMessage>> invokeTool = state -> {
             log.info("invokeTool:\n{}", state.messages());
 
             var lastMessage = state.lastMessage()
@@ -122,20 +127,22 @@ public class StreamingTestITest {
 
             if (lastMessage instanceof AiMessage lastAiMessage) {
 
-                var result = tools.execute(lastAiMessage.toolExecutionRequests(), null)
-                        .orElseThrow(() -> (new IllegalStateException("no tool found!")));
-
-                return Map.of("messages", result);
+                return tools.execute(
+                        lastAiMessage.toolExecutionRequests(),
+                        InvocationContext.builder()
+                                .invocationParameters( InvocationParameters.from(Map.of()) )
+                                .build(), "messages")
+                        .thenApply(Command::update);
 
             }
 
-            throw new IllegalStateException("invalid last message");
+            return CompletableFuture.failedFuture( new IllegalStateException("invalid last message") );
         };
 
         // Define Graph
         var workflow = new StateGraph<>(MessagesState.SCHEMA, stateSerializer)
                 .addNode("agent", node_async(callModel))
-                .addNode("tools", node_async(invokeTool))
+                .addNode("tools", invokeTool)
                 .addEdge(START, "agent")
                 .addConditionalEdges("agent",
                         edge_async(routeMessage),

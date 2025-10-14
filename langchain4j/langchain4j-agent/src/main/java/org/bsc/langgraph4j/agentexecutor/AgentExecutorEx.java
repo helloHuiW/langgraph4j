@@ -3,6 +3,8 @@ package org.bsc.langgraph4j.agentexecutor;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.*;
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationParameters;
 import org.bsc.langgraph4j.GraphStateException;
 import org.bsc.langgraph4j.StateGraph;
 import org.bsc.langgraph4j.action.*;
@@ -132,10 +134,11 @@ public interface AgentExecutorEx {
         }
     }
 
-    static AsyncNodeActionWithConfig<State> executeTooL( LC4jToolService toolService, String actionName  ) {
+    static AsyncNodeActionWithConfig<State> executeTool( LC4jToolService toolService, String actionName ) {
 
-        return AsyncNodeActionWithConfig.node_async(( state, config ) -> {
+        return ( state, config ) -> {
             log.trace( "ExecuteTool" );
+
             var toolExecutionRequests = state.lastMessage()
                     .filter( m -> ChatMessageType.AI==m.type() )
                     .map( m -> (AiMessage)m )
@@ -146,16 +149,14 @@ public interface AgentExecutorEx {
                     .orElseThrow(() -> new IllegalArgumentException("no tool execution request found!"))
                     ;
 
-            var results = toolExecutionRequests.stream()
-                    .map(toolService::execute)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList()
-                    ;
+            final var context = InvocationContext.builder()
+                    .invocationParameters( InvocationParameters.from(state.data()))
+                    .build();
 
-            return Map.of("tool_execution_results", results );
+            return toolService.execute( toolExecutionRequests, context, "tool_execution_results")
+                    .thenApply( Command::update );
 
-        });
+        };
     }
 
     private static AsyncNodeActionWithConfig<State> dispatchTools(Set<String> approvals ) {
@@ -291,7 +292,7 @@ public interface AgentExecutorEx {
                     .toolName(ToolSpecification::name)
                     .callModelAction( new CallModel<>(this) )
                     .dispatchToolsAction( dispatchTools( approvals.keySet() ) )
-                    .executeToolFactory( ( toolName ) -> executeTooL( toolService, toolName ) )
+                    .executeToolFactory( ( toolName ) -> executeTool( toolService, toolName ) )
                     .shouldContinueEdge( shouldContinue() )
                     .approvalActionEdge( approvalAction() )
                     .dispatchActionEdge( dispatchAction() )

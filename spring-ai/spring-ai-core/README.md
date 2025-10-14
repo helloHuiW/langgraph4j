@@ -11,7 +11,7 @@
 <dependency>
     <groupId>org.bsc.langgraph4j</groupId>
     <artifactId>langgraph4j-spring-ai</artifactId>
-    <version>1.7.0-beta2</version>
+    <version>1.7.0-beta3</version>
 </dependency>
 ```
 
