@@ -660,7 +660,7 @@ public class CompiledGraph<State extends AgentState> {
                 this.context = new Context();
                 //this.nextNodeId = null;
                 //this.currentNodeId = START;
-                this.config = config;
+                this.config = config.withCheckPointId( null );
             }
         }
 
