@@ -18,9 +18,9 @@ import static java.util.Objects.requireNonNull;
  * graph execution engine to process.
  */
 public class ToolResponseBuilder {
+    public static final String COMMAND_RESULT = "AtomicReference<Command>";
 
     private final Map<String,Object> context;
-    private final String commandResultKey;
     private String gotoNode;
     private Map<String,Object> update;
     
@@ -28,11 +28,9 @@ public class ToolResponseBuilder {
      * Constructs a new ToolResponseBuilder.
      *
      * @param context the shared execution context map
-     * @param commandResultKey the key in the context map where the resulting {@link Command} will be stored
      */
-    public ToolResponseBuilder(Map<String,Object> context, String commandResultKey ) {
+    public ToolResponseBuilder(Map<String,Object> context ) {
         this.context = requireNonNull(context, "context cannot be null!");
-        this.commandResultKey = requireNonNull(commandResultKey, "commandResultKey cannot be null!");
     }
 
     /**
@@ -92,12 +90,12 @@ public class ToolResponseBuilder {
      */
     public final void buildAndSet() {
 
-        final var commandResultObject = context.get(commandResultKey);
+        final var commandResultObject = context.get(COMMAND_RESULT);
 
         final var commandResultRef = new TypeRef<AtomicReference<Command>>() {};
 
         var commandResult = commandResultRef.cast( commandResultObject )
-                .orElseThrow( () -> new IllegalStateException( format("'%s' property in context is not right type",commandResultKey )));
+                .orElseThrow( () -> new IllegalStateException( format("'%s' property in context is not right type",COMMAND_RESULT )));
 
         commandResult.set( new Command( gotoNode, update) );
     }
