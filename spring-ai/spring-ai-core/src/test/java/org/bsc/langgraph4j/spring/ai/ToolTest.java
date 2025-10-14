@@ -37,7 +37,7 @@ public class ToolTest {
             return SpringAIToolResponseBuilder.of(context)
                     .update( Map.of( "arg0", message, "arg1", "execTest2" ) )
                     .gotoNode( "END" )
-                    .build( format("test tool ('%s') executed", message) );
+                    .buildAndReturn( format("test tool ('%s') executed", message) );
 
         }
 
@@ -48,7 +48,7 @@ public class ToolTest {
 
             return SpringAIToolResponseBuilder.of(context)
                     .update( Map.of( "stackTrace", stackTrace ) )
-                    .build( stackTrace.size() );
+                    .buildAndReturn( stackTrace.size() );
         }
 
     }
