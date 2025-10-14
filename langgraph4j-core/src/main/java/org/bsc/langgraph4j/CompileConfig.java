@@ -21,22 +21,12 @@ public class CompileConfig {
     private Set<String> interruptsAfter = Set.of();
     private boolean releaseThread = false;
     private boolean interruptBeforeEdge = false;
+    private int recursionLimit = 25;
 
-    /**
-     * Returns the array of interrupts that will occur before the specified node.
-     *
-     * @return an array of interruptible nodes.
-     */
-    @Deprecated(forRemoval = true)
-    public String[] getInterruptBefore() { return interruptsBefore.toArray( new String[0]); }
 
-    /**
-     * Returns the array of interrupts that will occur after the specified node.
-     *
-     * @return an array of interruptible nodes.
-     */
-    @Deprecated(forRemoval = true)
-    public String[] getInterruptAfter() { return interruptsAfter.toArray( new String[0]); }
+    public int recursionLimit() {
+        return recursionLimit;
+    }
 
     /**
      * Returns the array of interrupts that will occur before the specified node.
@@ -123,6 +113,15 @@ public class CompileConfig {
             this.config.checkpointSaver = checkpointSaver;
             return this;
         }
+
+        public Builder recursionLimit(int recursionLimit) {
+            if( recursionLimit <= 0 ) {
+                throw new IllegalArgumentException("recursionLimit must be > 0!");
+            }
+            this.config.recursionLimit = recursionLimit;
+            return this;
+        }
+
         /**
          * Sets the actions to be performed before an interruption.
          *
