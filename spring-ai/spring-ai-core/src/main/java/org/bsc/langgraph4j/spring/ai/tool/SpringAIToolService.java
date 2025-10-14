@@ -57,14 +57,14 @@ public class SpringAIToolService {
      *
      * @param toolCalls The list of tool calls to execute.
      * @param toolContextData The tool context data.
-     * @param resultPropertyName name of the state property where ste the tool response message
+     * @param propertyNameToUpdate name of the state property where ste the tool response message
      * @return A completable future that will be completed with the tool response message.
      */
-    public CompletableFuture<Command> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextData, String resultPropertyName) {
-        if( resultPropertyName == null  ) {
+    public CompletableFuture<Command> executeFunctions(List<AssistantMessage.ToolCall> toolCalls, Map<String,Object> toolContextData, String propertyNameToUpdate) {
+        if( propertyNameToUpdate == null  ) {
             return failedFuture(new NullPointerException("propertyName cannot be null"));
         }
-        if( resultPropertyName.isEmpty()  ) {
+        if( propertyNameToUpdate.isEmpty()  ) {
             return failedFuture(new IllegalArgumentException("propertyName cannot be empty") );
         }
 
@@ -99,7 +99,7 @@ public class SpringAIToolService {
 
         }
 
-        update = mergeMap( update, Map.of(resultPropertyName, new ToolResponseMessage( toolResponses )) );
+        update = mergeMap( update, Map.of(propertyNameToUpdate, new ToolResponseMessage( toolResponses )) );
 
         return completedFuture( new Command( gotoNode, update  ) );
     }
