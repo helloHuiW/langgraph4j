@@ -2,12 +2,16 @@ package org.bsc.langgraph4j.checkpoint;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import oracle.jdbc.OracleStatement;
 import oracle.jdbc.OracleType;
+import oracle.jdbc.OracleTypes;
 import oracle.jdbc.provider.oson.OsonFactory;
 import oracle.sql.json.OracleJsonDatum;
 import org.bsc.langgraph4j.RunnableConfig;
 
 import javax.sql.DataSource;
+import javax.swing.text.html.HTML.Tag;
+
 import java.sql.*;
 import java.util.*;
 
@@ -189,6 +193,19 @@ public class OracleSaver extends MemorySaver {
 
     try (Connection connection = dataSource.getConnection();
          PreparedStatement preparedStatement = connection.prepareStatement(SELECT_CHECKPOINTS)) {
+          
+      // Calls to defineColumnType reduce the number of network requests. When Oracle JDBC knows that it is
+      // fetching VECTOR, CLOB, and/or JSON columns, the first request it sends to the database can include a LOB
+      // prefetch size (VECTOR and JSON are value-based-lobs). If defineColumnType is not called, then JDBC needs
+      // to send an additional request with the LOB prefetch size, after the first request has the database
+      // respond with the column data types. To request all data, the prefetch size is Integer.MAX_VALUE.
+      OracleStatement oracleStatement = preparedStatement.unwrap(OracleStatement.class);
+      oracleStatement.defineColumnType(1, OracleTypes.VARCHAR); // checkpoint_id
+      oracleStatement.defineColumnType(2, OracleTypes.VARCHAR); // node_id
+      oracleStatement.defineColumnType(3, OracleTypes.VARCHAR); // next_node_id
+      oracleStatement.defineColumnType(4, OracleTypes.JSON, Integer.MAX_VALUE); // state_data
+      oracleStatement.setLobPrefetchSize(Integer.MAX_VALUE); // Workaround for Oracle JDBC bug 37030121
+      
       preparedStatement.setString(1, threadName);
       try (ResultSet resultSet = preparedStatement.executeQuery()) {
         while (resultSet.next()) {
