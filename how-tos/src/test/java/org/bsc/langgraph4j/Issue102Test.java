@@ -23,7 +23,7 @@ public class Issue102Test {
         var graph =  new StateGraph<>(AgentState::new)
         .addNode("node1", node_async( agentState -> Map.of("node1_result", "111") ) )
         .addNode("node2", node_async( agentState ->
-             Map.of("node2_result", new AsyncGenerator<StreamingOutput<?>>() {
+             Map.of("node2_result", new AsyncGenerator.Base<StreamingOutput<?>>() {
 
                 final StringBuffer sb = new StringBuffer();
 

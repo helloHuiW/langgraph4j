@@ -417,7 +417,7 @@ const nodeA = (state, config) => {
 See [this guide](/langgraph4j/how-tos/langgraph4j-howtos/configuration.html) for a full breakdown on configuration 
 -->
 
-## Breakpoints
+## Breakpoints (AKA interruptions )
 
 In langgraph4j, a graph's execution can be paused at any node. This is particularly useful for implementing features like human-in-the-loop approvals, where the graph needs to
 wait for external input before proceeding.
@@ -471,11 +471,27 @@ In order to resume execution, you can just invoke your graph with `GraphInput.re
 
 ```java
 // Initial run of graph
-graph.invoke(inputs, config);
+graph.stream(inputs, config);
 
 // Let's assume it hit a breakpoint somewhere, you can then resume by passing in None
-graph.invoke(GraphInput.resume(), config);
+graph.stream(GraphInput.resume(), config);
 ```
+
+### Achieve InterruptionMetadata object after interruption
+
+It is most important understand that the **nodes iterator holds the final result of graph execution**. In the case of interruption the `InterruptionMetadata` instance will be set as iterator's result so you can achieve it using : `AsyncGenerator.resultValue(generator)` as shown below
+ 
+```java
+var generator = app.stream( inputs );
+for (var i : iterator) {
+   System.out.println(i);
+}
+var resultValue = AsyncGenerator.resultValue(generator).orElse(null);
+
+```
+> `resultValue` is a generic `Object` that in case of interruptions is an instance of InterruptionMetadata
+
+
 
 See [Wait for user Input (HITL)](../how-tos/wait-user-input.ipynb) for a full walkthrough of how to add breakpoints.
 

@@ -32,6 +32,7 @@ nav:
       - Parallel Branch: core/parallel-branch.md
       - Streaming: core/streaming.md
       - Subgraphs: core/subgraph.md
+      - Cancellation: core/cancellation.md
       - Checkpoint (Postgres): core/checkpoint-postgres.md
     - How to(s): 
       - Adaptive RAG: how-tos/adaptiverag.ipynb

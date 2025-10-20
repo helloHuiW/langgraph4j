@@ -16,13 +16,31 @@ import java.util.Optional;
  *                 no state updates.
  */
 public record Command(String gotoNode, Map<String,Object> update) {
+    private static final Command EMPTY_COMMAND = new Command( Map.of() );
+
+    public static Command emptyCommand() {
+        return EMPTY_COMMAND;
+    }
+
+    public String gotoNode() {
+        return Objects.requireNonNull(gotoNode, "gotoNode cannot be null");
+    }
+
+    public Map<String,Object> update() {
+        return Optional.ofNullable(update).orElseGet(Map::of);
+    }
+
+    public Optional<String> gotoNodeSafe() {
+        return Optional.ofNullable(gotoNode);
+    }
 
     /**
      * check for null values
      */
     public Command {
-        Objects.requireNonNull(gotoNode, "gotoNode cannot be null");
-        Objects.requireNonNull(update, "update cannot be null");
+        if( gotoNode == null && update == null ) {
+            throw new IllegalArgumentException("gotoNode and update cannot both be null");
+        }
     }
 
     /**
@@ -33,7 +51,11 @@ public record Command(String gotoNode, Map<String,Object> update) {
      * @param gotoNode The name of the next node to transition to. Can be null.
      */
     public Command( String gotoNode ) {
-        this( gotoNode, Map.of() );
+        this( gotoNode, null );
+    }
+
+    public Command( Map<String,Object> update ) {
+        this( null, update );
     }
 
 }

@@ -37,7 +37,7 @@ import static org.bsc.langgraph4j.StateGraph.START;
  */
 public interface Agent {
 
-    String CONTINUE_LABEL = "continue";
+    String AGENT_LABEL = "agent";
     String END_LABEL = "end";
 
     static <M, S extends MessagesState<M>> Builder<M,S> builder() {
@@ -48,8 +48,7 @@ public interface Agent {
 
         private StateSerializer<S> stateSerializer;
         private AsyncNodeActionWithConfig<S> callModelAction;
-        private AsyncNodeActionWithConfig<S> executeToolsAction;
-        private AsyncCommandAction<S> shouldContinueEdge;
+        private AsyncCommandAction<S> executeToolsAction;
         private Map<String, Channel<?>> schema;
 
         public Builder<M,S> stateSerializer(StateSerializer<S> stateSerializer) {
@@ -67,13 +66,8 @@ public interface Agent {
             return this;
         }
 
-        public Builder<M,S> executeToolsAction(AsyncNodeActionWithConfig<S> executeToolsAction) {
+        public Builder<M,S> executeToolsAction(AsyncCommandAction<S> executeToolsAction) {
             this.executeToolsAction = executeToolsAction;
-            return this;
-        }
-
-        public Builder<M,S> shouldContinueEdge(AsyncCommandAction<S> shouldContinueEdge) {
-            this.shouldContinueEdge = shouldContinueEdge;
             return this;
         }
 
@@ -82,18 +76,15 @@ public interface Agent {
             return new StateGraph<>(
                     requireNonNull(schema, "schema is required!"),
                     requireNonNull(stateSerializer, "stateSerializer is required!"))
-                    .addEdge(START, "agent")
-                    .addNode("agent",  requireNonNull(callModelAction, "callModelAction is required!") )
-                    .addNode("action", requireNonNull(executeToolsAction, "executeToolsAction is required!") )
-                    .addConditionalEdges(
-                            "agent",
-                            requireNonNull(shouldContinueEdge, "shouldContinue is required!"),
+                    .addNode(AGENT_LABEL,  requireNonNull(callModelAction, "callModelAction is required!") )
+                    .addNode("action",
+                            requireNonNull(executeToolsAction, "executeToolsAction is required!"),
                             EdgeMappings.builder()
-                                    .to("action", CONTINUE_LABEL)
-                                    .toEND(END_LABEL)
-                                    .build()
-                    )
-                    .addEdge("action", "agent")
+                            .to(AGENT_LABEL)
+                            .toEND(END_LABEL)
+                            .build())
+                    .addEdge(START, AGENT_LABEL)
+                    .addEdge(AGENT_LABEL, "action")
                     ;
 
         }

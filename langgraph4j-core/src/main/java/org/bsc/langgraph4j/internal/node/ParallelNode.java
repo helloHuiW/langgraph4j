@@ -31,7 +31,10 @@ public class ParallelNode<State extends AgentState> extends Node<State> {
             Map<String, Channel<?>> channels ) implements AsyncNodeActionWithConfig<State> {
 
         private CompletableFuture<Map<String, Object>> evalGenerator(AsyncGenerator<NodeOutput<State>> generator, Map<String, Object> initPartialState) {
-            return generator.collectAsync(new ArrayList<>(), ArrayList::add)
+            return generator.reduce(new ArrayList<NodeOutput<State>>(), (result, value) -> {
+                        result.add(value);
+                        return result;
+                    })
                     .thenApply(list -> {
                         Map<String, Object> result = initPartialState;
                         for (var output : list) {

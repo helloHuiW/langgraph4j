@@ -10,7 +10,8 @@ import org.bsc.langgraph4j.prebuilt.MessagesState;
 import org.bsc.langgraph4j.serializer.std.ObjectStreamStateSerializer;
 import org.bsc.langgraph4j.state.AgentState;
 import org.bsc.langgraph4j.subgraph.SubGraphOutput;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.List;
 import java.util.Map;
@@ -99,8 +100,9 @@ public class CompiledSubGraphTest {
                 .compile(compileConfig);
     }
 
-    @Test
-    public void testCompileSubGraphWithInterruptionUsingException() throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    private void testCompileSubGraphInterruptionUsingException( CompiledGraph.StreamMode mode ) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -125,7 +127,10 @@ public class CompiledSubGraphTest {
                 .addEdge("NODE4", "NODE5")
                 .addEdge("NODE5", END)
                 .compile(compileConfig);
-        var runnableConfig = RunnableConfig.builder().build();
+
+        var runnableConfig = RunnableConfig.builder()
+                                .streamMode(mode)
+                                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -173,9 +178,9 @@ public class CompiledSubGraphTest {
 
     }
 
-
-    @Test
-    public void testCompileSubGraphWithInterruptionSharingSaver() throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    public void testCompileSubGraphInterruptionSharingSaver(  CompiledGraph.StreamMode mode ) throws Exception {
 
         var saver = new MemorySaver();
 
@@ -202,8 +207,9 @@ public class CompiledSubGraphTest {
                 .compile(compileConfig);
 
         var runnableConfig = RunnableConfig.builder()
-                                .threadId("1")
-                                .build();
+                .threadId("1")
+                .streamMode(mode)
+                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -247,8 +253,9 @@ public class CompiledSubGraphTest {
                 "[NODE5<myNewValue>]"), output.get().state().messages() );
     }
 
-    @Test
-    public void testCompileSubGraphWithInterruptionWithDifferentSaver() throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    public void testCompileSubGraphInterruptionWithDifferentSaver( CompiledGraph.StreamMode mode ) throws Exception {
 
         var parentSaver = new MemorySaver();
 
@@ -275,7 +282,9 @@ public class CompiledSubGraphTest {
                 .addEdge("NODE5", END)
                 .compile(compileConfig);
 
-        var runnableConfig = RunnableConfig.builder().build();
+        var runnableConfig = RunnableConfig.builder()
+                                .streamMode(mode)
+                                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -319,8 +328,9 @@ public class CompiledSubGraphTest {
                 "[NODE5]"), output.get().state().messages() );
     }
 
-    @Test
-    public void testNestedCompiledSubgraphFormIssue216() throws Exception {
+    @ParameterizedTest
+    @EnumSource( CompiledGraph.StreamMode.class     )
+    public void testNestedCompiledSubgraphFormIssue216( CompiledGraph.StreamMode mode ) throws Exception {
 
         var subSubGraph = new StateGraph<>(MyState::new)
                 .addNode("foo1", _makeNode("foo1"))
@@ -352,7 +362,9 @@ public class CompiledSubGraphTest {
                 .addEdge("main2", StateGraph.END)
                 .compile();
 
-        var runnableConfig = RunnableConfig.builder().build();
+        var runnableConfig = RunnableConfig.builder()
+                                .streamMode(mode)
+                                .build();
 
         var input = GraphInput.args(Map.of());
 
@@ -363,4 +375,5 @@ public class CompiledSubGraphTest {
                 .reduce((a, b) -> b);
 
     }
+
 }

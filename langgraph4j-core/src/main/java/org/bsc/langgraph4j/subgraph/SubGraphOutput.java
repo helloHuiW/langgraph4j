@@ -6,29 +6,30 @@ import org.bsc.langgraph4j.state.AgentState;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-public final class SubGraphOutput<State extends AgentState> extends NodeOutput<State> {
+/**
+ * Represents the output of a subgraph node.
+ * This class is sealed and permits {@link SubGraphSnapshotOutput} subclasses.
+ *
+ * @param <State> the type of the agent state
+ */
+public sealed class SubGraphOutput<State extends AgentState> extends NodeOutput<State> permits SubGraphSnapshotOutput {
 
-    public static <State extends AgentState> SubGraphOutput<State> of( NodeOutput<State> output, String subGraphId ) {
-        if( output instanceof SubGraphOutput<State> subGraphOutput) {
-            return subGraphOutput;
-        }
-        else {
-            return new SubGraphOutput<>( output.node(), output.state(), subGraphId );
-        }
-
-    }
     /**
      * subgraph node id
      */
     private final String subGraphId;
 
+    /**
+     * Returns the ID of the subgraph.
+     * @return the subgraph ID
+     */
     public String subGraphId() {
         return subGraphId;
 
     }
 
-    private SubGraphOutput(String node, State state, String subGraphId) {
-        super(node, state);
+    public SubGraphOutput( NodeOutput<State> output, String subGraphId) {
+        super(output.node(), output.state());
         this.subGraphId = requireNonNull(subGraphId, "subGraphId cannot be null");
     }
 

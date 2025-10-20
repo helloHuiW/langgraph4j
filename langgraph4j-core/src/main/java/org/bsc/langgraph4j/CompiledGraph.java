@@ -80,7 +80,7 @@ public class CompiledGraph<State extends AgentState> {
 
     private final ProcessedNodesEdgesAndConfig<State> processedData;
 
-    private int maxIterations = 25;
+    private int maxIterations;
 
     public final CompileConfig compileConfig;
 
@@ -90,6 +90,9 @@ public class CompiledGraph<State extends AgentState> {
      * @param stateGraph the StateGraph to be used in this CompiledGraph
      */
     protected CompiledGraph(StateGraph<State> stateGraph, CompileConfig compileConfig ) throws GraphStateException {
+
+        maxIterations = compileConfig.recursionLimit();
+
         this.stateGraph = stateGraph;
 
         this.processedData = ProcessedNodesEdgesAndConfig.process( stateGraph, compileConfig );
@@ -279,7 +282,9 @@ public class CompiledGraph<State extends AgentState> {
      *
      * @param maxIterations the maximum number of iterations
      * @throws IllegalArgumentException if maxIterations is less than or equal to 0
+     * @deprecated use CompileConfig.recursionLimit() instead
      */
+    @Deprecated(forRemoval = true)
     public void setMaxIterations(int maxIterations) {
         if( maxIterations <= 0 ) {
             throw new IllegalArgumentException("maxIterations must be > 0!");
@@ -385,7 +390,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> stream( GraphInput input, RunnableConfig config ) {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> stream( GraphInput input, RunnableConfig config ) {
         requireNonNull(config, "config cannot be null");
         requireNonNull( input, "input cannot be null" );
 
@@ -401,7 +406,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> stream( Map<String,Object> inputs, RunnableConfig config ) {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> stream( Map<String,Object> inputs, RunnableConfig config ) {
         return stream(  ( inputs == null ) ? new GraphResume() : new GraphArgs(inputs), config );
     }
 
@@ -422,7 +427,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> streamSnapshots( GraphInput input, RunnableConfig config )  {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> streamSnapshots( GraphInput input, RunnableConfig config )  {
         requireNonNull(config, "config cannot be null");
 
         final AsyncNodeGenerator<NodeOutput<State>> generator = new AsyncNodeGenerator<>( input, config.withStreamMode(StreamMode.SNAPSHOTS) );
@@ -436,7 +441,7 @@ public class CompiledGraph<State extends AgentState> {
      * @param config the invoke configuration
      * @return an AsyncGenerator stream of NodeOutput
      */
-    public AsyncGenerator<NodeOutput<State>> streamSnapshots( Map<String,Object> inputs, RunnableConfig config )  {
+    public AsyncGenerator.Cancellable<NodeOutput<State>> streamSnapshots( Map<String,Object> inputs, RunnableConfig config )  {
         return streamSnapshots( ( inputs == null ) ? new GraphResume() : new GraphArgs(inputs), config );
     }
 
@@ -535,7 +540,7 @@ public class CompiledGraph<State extends AgentState> {
      *
      * @param <Output> the type of the output
      */
-    public class AsyncNodeGenerator<Output extends NodeOutput<State>> implements AsyncGenerator<Output> {
+    public class AsyncNodeGenerator<Output extends NodeOutput<State>> extends AsyncGenerator.BaseCancellable<Output> {
 
         static class Context {
             record ReturnFromEmbed( Object value ) {
@@ -655,7 +660,7 @@ public class CompiledGraph<State extends AgentState> {
                 this.context = new Context();
                 //this.nextNodeId = null;
                 //this.currentNodeId = START;
-                this.config = config;
+                this.config = config.withCheckPointId( null );
             }
         }
 
@@ -862,7 +867,7 @@ public class CompiledGraph<State extends AgentState> {
 
                 return evaluateAction( action ).get();
             }
-            catch( Exception e ) {
+            catch( Throwable e ) {
                 log.error( e.getMessage(), e );
                 return Data.error(e);
             }

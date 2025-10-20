@@ -4,6 +4,8 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageType;
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.service.tool.ToolExecutor;
 import org.bsc.langgraph4j.GraphStateException;
 import org.bsc.langgraph4j.StateGraph;
@@ -16,6 +18,9 @@ import org.bsc.langgraph4j.prebuilt.MessagesState;
 import org.bsc.langgraph4j.serializer.StateSerializer;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * Interface representing an Agent Executor (AKA ReACT agent).
@@ -81,37 +86,35 @@ public interface AgentExecutor {
     }
 
 
-    static AsyncNodeActionWithConfig<AgentExecutor.State> executeTooL( LC4jToolService toolService ) {
+    static AsyncCommandAction<AgentExecutor.State> executeTool( LC4jToolService toolService ) {
 
-        return AsyncNodeActionWithConfig.node_async((state, config) -> {
+        return (state, config) -> {
             log.trace("executeTools");
 
-            var toolExecutionRequests = state.lastMessage()
-                    .filter(m -> ChatMessageType.AI == m.type())
-                    .map(m -> (AiMessage) m)
-                    .filter(AiMessage::hasToolExecutionRequests)
-                    .map(AiMessage::toolExecutionRequests);
+            final var toolExecutionRequests = state.lastMessage()
+                        .filter(m -> ChatMessageType.AI == m.type())
+                        .map(m -> (AiMessage) m)
+                        .filter(AiMessage::hasToolExecutionRequests)
+                        .map(AiMessage::toolExecutionRequests);
 
             if (toolExecutionRequests.isEmpty()) {
-                return Map.of("agent_response", "no tool execution request found!");
+                return completedFuture(
+                        new Command(Agent.END_LABEL,
+                                    Map.of("agent_response", "no tool execution request found!")));
             }
 
-            var result = toolExecutionRequests.get().stream()
-                    .map(toolService::execute)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList();
+            final var context = InvocationContext.builder()
+                                .invocationParameters( InvocationParameters.from(state.data()))
+                                .build();
 
-            return Map.of("messages", result);
+            return toolService.execute( toolExecutionRequests.get(), context, "messages")
+                    .thenApply( command ->
+                        state.finalResponse()
+                                .map(res -> new Command(Agent.END_LABEL, command.update()) )
+                                .orElseGet( () -> new Command(Agent.AGENT_LABEL, command.update()) )
+                    );
 
-        });
-    }
-
-    private static AsyncCommandAction<State> shouldContinue() {
-        return AsyncCommandAction.command_async( (state, config ) ->
-            state.finalResponse()
-                .map(res -> new Command(Agent.END_LABEL))
-                .orElse(new Command(Agent.CONTINUE_LABEL) ));
+        };
     }
 
     /**
@@ -186,8 +189,7 @@ public interface AgentExecutor {
                     .stateSerializer(stateSerializer)
                     .schema( State.SCHEMA )
                     .callModelAction( new CallModel<>( this ) )
-                    .executeToolsAction( executeTooL( toolService ) )
-                    .shouldContinueEdge(shouldContinue())
+                    .executeToolsAction( executeTool( toolService ) )
                     .build();
 
         }

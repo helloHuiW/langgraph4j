@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Utility class for creating collections.
@@ -36,17 +37,6 @@ public final class CollectionsUtils {
                 })
                 .collect(Collectors.joining("\n\t", "{\n\t", "\n\t}") );
 
-    }
-
-    /**
-     * Returns the last value in the list, if present.
-     *
-     * @return an Optional containing the last value if present, otherwise an empty Optional
-     * @deprecated use {@link #lastOf(List)} instead
-     */
-    @Deprecated(forRemoval = true)
-    public static <T> Optional<T> last( List<T> values ) {
-        return lastOf( values );
     }
 
     /**
@@ -84,15 +74,19 @@ public final class CollectionsUtils {
      * @param map2        the second map
      * @param <K>         the type of the keys in the maps
      * @param <V>         the type of the values in the maps
-     * @return a new map containing all entries from both maps, with collisions resolved by the merge function
-     * @throws NullPointerException if map1 or map2 is null
+     * @return a new map containing all entries from both maps, collisions result in error
+     * @throws NullPointerException if both maps are null
      */
     public static <K, V> Map<K, V> mergeMap( Map<K,V> map1, Map<K,V> map2 ) {
-        var map1Entries = Objects.requireNonNull(map1, "map1 cannot be null").entrySet().stream();
-        var map2Entries = Objects.requireNonNull(map2, "map2 cannot be null").entrySet().stream();
+        if( map2 == null || map2.isEmpty() ) {
+            return requireNonNull(map1, "map1 cannot be null");
+        }
+        if( map1 == null || map1.isEmpty() ) {
+            return requireNonNull(map2, "map2 cannot be null");
+        }
 
-        return Stream.concat(map1Entries, map2Entries )
-                .collect( Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return Stream.concat(map1.entrySet().stream(), map2.entrySet().stream() )
+                .collect( Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     /**
@@ -104,26 +98,39 @@ public final class CollectionsUtils {
      * @param <K>         the type of the keys in the maps
      * @param <V>         the type of the values in the maps
      * @return a new map containing all entries from both maps, with collisions resolved by the merge function
-     * @throws NullPointerException if map1, map2, or mergeFunction is null
+     * @throws NullPointerException if both maps are null
      */
     public static <K, V> Map<K, V> mergeMap(Map<K, V> map1, Map<K, V> map2, BinaryOperator<V> mergeFunction) {
-        var map1Entries = Objects.requireNonNull(map1, "map1 cannot be null").entrySet().stream();
-        var map2Entries = Objects.requireNonNull(map2, "map2 cannot be null").entrySet().stream();
-        Objects.requireNonNull(mergeFunction, "mergeFunction cannot be null");
+        if( map2 == null || map2.isEmpty() ) {
+            return requireNonNull(map1, "map1 cannot be null");
+        }
+        if( map1 == null || map1.isEmpty() ) {
+            return requireNonNull(map2, "map2 cannot be null");
+        }
 
-        return Stream.concat(map1Entries, map2Entries)
-                .collect(Collectors.toMap(
+        return Stream.concat(map1.entrySet().stream(), map2.entrySet().stream())
+                .collect(Collectors.toUnmodifiableMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
-                        mergeFunction
+                        requireNonNull(mergeFunction, "mergeFunction cannot be null")
                 ));
     }
 
+    /**
+     * create an entry that accept null value
+     *
+     * @param key – the key represented by this entry
+     * @param value – the value represented by this entry
+     * @return new entry
+     * Type parameters:
+     * <K> – the type of the key
+     * <V> – the type of the value
+     */
     public static <K,V>  Map.Entry<K,V> entryOf( K key, V value ) {
         return new AbstractMap.SimpleImmutableEntry<>(key, value);
     }
 
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static <T> List<T> listOf(Class<T> clazz) {
         return Collections.emptyList();
     }

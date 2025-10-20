@@ -125,7 +125,12 @@ export class LG4JResultElement extends LitElement {
     const results = stack.peek()
 
     const index = (results) ? results.push( result ) : stack.push( [result] )
-    
+
+    if( result.cancelled ) {
+      // add new elemnt into history stack
+      stack.push( [] )
+    }
+
     this.threadMap.set( thread, stack );
 
     if( result.next || result.node) {
@@ -220,7 +225,7 @@ export class LG4JResultElement extends LitElement {
     return html`
     <div class="collapse collapse-arrow bg-base-200">
       <input type="radio" name="item-${index}" checked="checked" />
-      <div class="collapse-title text-ml font-bold">${result.node}</div>
+      <div class="collapse-title text-ml font-bold">${result.cancelled ? '"CANCELLED"' : result.node}</div>
       <div class="collapse-content">
         <lg4j-node-output id="(${result.node})[${index}]" value="${JSON.stringify(result).trim()}"></lg4j-node-output>
       </div>

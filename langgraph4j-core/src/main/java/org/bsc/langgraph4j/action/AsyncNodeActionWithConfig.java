@@ -35,7 +35,7 @@ public interface AsyncNodeActionWithConfig<S extends AgentState> extends BiFunct
             CompletableFuture<Map<String, Object>> result = new CompletableFuture<>();
             try {
                 result.complete(syncAction.apply(t, config));
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 result.completeExceptionally(e);
             }
             return result;

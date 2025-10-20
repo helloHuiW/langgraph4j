@@ -3,7 +3,7 @@ package org.bsc.langgraph4j.internal.node;
 import org.bsc.langgraph4j.*;
 import org.bsc.langgraph4j.action.AsyncNodeActionWithConfig;
 import org.bsc.langgraph4j.state.AgentState;
-import org.bsc.langgraph4j.subgraph.SubGraphOutput;
+import org.bsc.langgraph4j.subgraph.SubGraphOutputFactory;
 import org.bsc.langgraph4j.utils.TypeRef;
 
 import java.util.Map;
@@ -66,7 +66,8 @@ public record SubCompiledGraphNodeAction<State extends AgentState>(
                         .threadId( config.threadId()
                                             .map( threadId -> format("%s_%s", threadId, subGraphId()))
                                             .orElseGet(this::subGraphId))
-                                            .build();
+                        .streamMode( config.streamMode() )
+                        .build();
             }
         }
 
@@ -82,7 +83,7 @@ public record SubCompiledGraphNodeAction<State extends AgentState>(
             }
 
             var generator = subGraph.stream(input, subGraphRunnableConfig)
-                    .map( n -> SubGraphOutput.of( n, nodeId) );
+                    .map( n -> SubGraphOutputFactory.createFormNodeOutput( n, nodeId) );
 
             future.complete( Map.of(format("%s_%s",subGraphId(), UUID.randomUUID()), generator));
 

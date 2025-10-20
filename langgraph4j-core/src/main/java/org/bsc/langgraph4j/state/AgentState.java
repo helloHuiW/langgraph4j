@@ -170,7 +170,7 @@ public class AgentState {
      * @return The value to which the specified key is mapped, or {@code defaultValue} if this map contains no mapping for the key.
      * @deprecated This method is deprecated and may be removed in future versions.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public final <T> T value(String key, T defaultValue ) { return this.<T>value(key).orElse(defaultValue);}
 
 
@@ -182,7 +182,7 @@ public class AgentState {
      * @param <T> the type of the value
      * @return The value associated with the key, or the default value provided by {@code defaultProvider}.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public final <T> T value(String key, Supplier<T>  defaultProvider ) { return this.<T>value(key).orElseGet(defaultProvider); }
 
     /**
@@ -193,7 +193,7 @@ public class AgentState {
      * @return a new state resulting from the merge
      * @deprecated use {@link #updateState(AgentState, Map, Map)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public final Map<String,Object> mergeWith( Map<String,Object> partialState, Map<String, Channel<?>> channels ) {
         return updateState(data(), partialState, channels);
     }

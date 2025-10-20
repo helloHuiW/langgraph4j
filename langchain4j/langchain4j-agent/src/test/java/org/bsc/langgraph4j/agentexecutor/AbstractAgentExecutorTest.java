@@ -18,6 +18,7 @@ import static org.bsc.langgraph4j.StateGraph.START;
 import static org.bsc.langgraph4j.action.AsyncEdgeAction.edge_async;
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 
+import static org.bsc.langgraph4j.utils.CollectionsUtils.lastOf;
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractAgentExecutorTest {
@@ -61,8 +62,8 @@ public abstract class AbstractAgentExecutorTest {
     void executeAgentWithSingleToolInvocation() throws Exception {
 
         var states = executeAgent("what is the result of test with messages: 'MY FIRST TEST'");
-        assertEquals( 5, states.size() );
-        var state = CollectionsUtils.lastOf(states).orElse(null);
+        assertEquals( 6, states.size() );
+        var state = lastOf(states).orElse(null);
         assertNotNull(state);
         assertTrue(state.finalResponse().isPresent());
         System.out.println(state.finalResponse().get());
@@ -73,8 +74,8 @@ public abstract class AbstractAgentExecutorTest {
     void executeAgentWithDoubleToolInvocation() throws Exception {
 
         var states = executeAgent("what is the result of test with messages: 'MY FIRST TEST' and the result of test with message: 'MY SECOND TEST'");
-        assertEquals( 5, states.size() );
-        var state = CollectionsUtils.lastOf(states).orElse(null);
+        assertEquals( 6, states.size() );
+        var state = lastOf(states).orElse(null);
         assertNotNull(state);
         assertTrue(state.finalResponse().isPresent());
         System.out.println(state.finalResponse().get());
@@ -84,27 +85,51 @@ public abstract class AbstractAgentExecutorTest {
     void executeAgentWithDoubleToolInvocationWithCheckpoint() throws Exception {
 
         var saver = new MemorySaver();
-        var states = executeAgent(
-                "what is the result of test with messages: 'MY FIRST TEST' and the result of test with message: 'MY SECOND TEST'",
-                "thread_1",
-                saver
-                );
-        assertEquals( 5, states.size() ); // iterations
-        var state = CollectionsUtils.lastOf(states).orElse(null);
-        assertNotNull(state);
-        assertTrue(state.finalResponse().isPresent());
-        System.out.println(state.finalResponse().get());
 
-        states = executeAgent(
-                "what is the result of test with messages: 'MY FIRST TEST' and the result of test with message: 'MY SECOND TEST'",
-                "thread_1",
-                saver
-        );
-        assertEquals( 3, states.size() ); // iterations
-        state = CollectionsUtils.lastOf(states).orElse(null);
+        CompileConfig compileConfig = CompileConfig.builder()
+                .checkpointSaver( saver )
+                .build();
+
+        var config = RunnableConfig.builder().
+                        threadId("thread_1")
+                        .build();
+
+        var graph = newGraph().compile( compileConfig );
+
+        var iterator = graph.stream(
+                Map.of( "messages",
+                        UserMessage.from("what is the result of test with messages: 'MY FIRST TEST' and the result of test with message: 'MY SECOND TEST'")),
+                config );
+
+        var states = iterator.stream()
+                .peek( s -> System.out.println( s.node() ) )
+                .map( NodeOutput::state)
+                .toList();
+
+        assertEquals( 6, states.size() ); // iterations
+        var state = lastOf(states).orElse(null);
         assertNotNull(state);
-        assertTrue(state.finalResponse().isPresent());
-        System.out.println(state.finalResponse().get());
+        assertTrue(state.lastMessage().isPresent());
+        System.out.printf( "final response: %s\n", state.lastMessage().get());
+
+        //var stateHistory = graph.lastStateOf( config ).orElseThrow();
+
+        iterator = graph.stream(
+                Map.of( "messages",
+                        UserMessage.from(
+                                "what are the results of tests?")),
+                config );
+
+        states = iterator.stream()
+                .peek( s -> System.out.println( s.node() ) )
+                .map( NodeOutput::state)
+                .toList();
+
+        assertEquals( 4, states.size() ); // iterations
+        state = lastOf(states).orElse(null);
+        assertNotNull(state);
+        assertTrue(state.lastMessage().isPresent());
+        System.out.printf( "final response: %s\n", state.lastMessage().get());
 
     }
 
