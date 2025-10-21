@@ -23,7 +23,7 @@
 
     <properties>
         <ojdbc.version>23.9.0.25.07</ojdbc.version>
-        <testcontainers.version>1.20.4</testcontainers.version>
+        <testcontainers.version>1.21.3</testcontainers.version>
     </properties>
 
     <dependencyManagement>
