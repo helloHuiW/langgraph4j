@@ -6,7 +6,6 @@ import org.bsc.langgraph4j.CompileConfig;
 import org.bsc.langgraph4j.RunnableConfig;
 import org.bsc.langgraph4j.StateGraph;
 import org.bsc.langgraph4j.action.NodeAction;
-import org.bsc.langgraph4j.serializer.std.ObjectStreamStateSerializer;
 import org.bsc.langgraph4j.state.AgentState;
 
 import java.io.IOException;
@@ -19,19 +18,21 @@ import static org.bsc.langgraph4j.StateGraph.START;
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.oracle.OracleContainer;
-import org.testcontainers.utility.MountableFile;
 
 public class OracleSaverTest {
 
     protected static final String ORACLE_IMAGE_NAME = "gvenzl/oracle-free:23.7-slim-faststart";
-    protected static final OracleDataSource DATA_SOURCE;
-    protected static final OracleDataSource SYSDBA_DATA_SOURCE;
+    protected static OracleDataSource DATA_SOURCE;
+    protected static OracleDataSource SYSDBA_DATA_SOURCE;
 
-    static {
+    protected static OracleContainer oracleContainer;
 
+    @BeforeAll
+    public static void setup() throws IOException {
         try {
             DATA_SOURCE = new oracle.jdbc.datasource.impl.OracleDataSource();
             SYSDBA_DATA_SOURCE = new oracle.jdbc.datasource.impl.OracleDataSource();
@@ -39,7 +40,7 @@ public class OracleSaverTest {
 
             if (urlFromEnv == null) {
                 // The Ryuk component is relied upon to stop this container.
-                OracleContainer oracleContainer = new OracleContainer(ORACLE_IMAGE_NAME)
+                oracleContainer = new OracleContainer(ORACLE_IMAGE_NAME)
                         .withStartupTimeout(Duration.ofSeconds(600))
                         .withConnectTimeoutSeconds(600)
                         .withDatabaseName("pdb1")
@@ -53,6 +54,7 @@ public class OracleSaverTest {
                         oracleContainer.getUsername(),
                         oracleContainer.getPassword());
                 initDataSource(SYSDBA_DATA_SOURCE, oracleContainer.getJdbcUrl(), "sys", oracleContainer.getPassword());
+
             } else {
                 initDataSource(
                         DATA_SOURCE,
@@ -70,6 +72,14 @@ public class OracleSaverTest {
         } catch (SQLException sqlException) {
             throw new AssertionError(sqlException);
         }
+
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        if (oracleContainer != null) {
+            oracleContainer.close();
+        }
     }
 
     static void initDataSource(OracleDataSource dataSource, String url, String username, String password)
@@ -86,9 +96,9 @@ public class OracleSaverTest {
                 .dataSource(DATA_SOURCE)
                 .build();
 
-        NodeAction<AgentState> agent_1 = state -> {
-            return Map.of("agent_1:prop1", "agent_1:test");
-        };
+        NodeAction<AgentState> agent_1 = state ->
+             Map.of("agent_1:prop1", "agent_1:test");
+
 
         var graph = new StateGraph<>(AgentState::new)
                 .addNode("agent_1", node_async(agent_1))
@@ -123,9 +133,9 @@ public class OracleSaverTest {
                 .dataSource(DATA_SOURCE)
                 .build();
 
-        NodeAction<AgentState> agent_1 = state -> {
-            return Map.of("agent_1:prop1", "agent_1:test");
-        };
+        NodeAction<AgentState> agent_1 = state ->
+            Map.of("agent_1:prop1", "agent_1:test");
+
 
         var graph = new StateGraph<>(AgentState::new)
                 .addNode("agent_1", node_async(agent_1))
