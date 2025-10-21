@@ -99,6 +99,7 @@ You'll typically use a `CheckpointSaver` implementation (e.g., `MemorySaver` for
 langgraph4j/
 ├── langgraph4j-bom/                     # LangGraph4j dependency management
 ├── langgraph4j-core/                    # LangGraph4j core components
+├── langgraph4j-oracle-saver             # LangGraph4j persistent checkpoint saver based on OracleDB
 ├── langgraph4j-postgres-saver           # LangGraph4j persistent checkpoint saver based on PostgresSQL
 ├── langchain4j/                         # LangChain4j integration
 │   ├── langchain4j-core/                # LangChain4j core components (integration required)
