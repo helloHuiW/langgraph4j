@@ -235,6 +235,7 @@
     <!-- LangGraph4j how-tos and examples, new examples repository: https://github.com/langgraph4j/langgraph4j-examples -->
     <module>how-tos</module>
     <module>langgraph4j-postgres-saver</module>
+    <module>langgraph4j-oracle-saver</module>
   </modules>
 
   <profiles>
