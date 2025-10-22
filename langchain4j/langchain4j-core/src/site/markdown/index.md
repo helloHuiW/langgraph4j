@@ -14,7 +14,7 @@
 <dependency>
     <groupId>org.bsc.langgraph4j</groupId>
     <artifactId>langgraph4j-langchain4j</artifactId>
-    <version>1.7.0-beta3</version>
+    <version>1.7.0</version>
 </dependency>
 ```
 
