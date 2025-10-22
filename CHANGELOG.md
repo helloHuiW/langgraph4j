@@ -2,6 +2,58 @@
 
 
 
+<!-- "name: v1.7.0" is a release tag -->
+
+## [v1.7.0](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0) (2025-10-22)
+
+
+
+### Documentation
+
+ -  bump to release 1.7.0 ([0d9ee2b52b058d0](https://github.com/bsorrentino/langgraph4j/commit/0d9ee2b52b058d0cdcb8b55f9d60186af460c2c7))
+
+ -  add new article about deep agents ([05ad4209fdf013d](https://github.com/bsorrentino/langgraph4j/commit/05ad4209fdf013d1d331094f00ad3fe6a1783479))
+
+ -  update site documentation ([85c4d07bae7039d](https://github.com/bsorrentino/langgraph4j/commit/85c4d07bae7039d946fd7c8cf1decc27a63d6522))
+     > - refine integrations documents
+
+ -  add  langgraph4j-oracle-saver in project structure ([b9f09d9dd221d9e](https://github.com/bsorrentino/langgraph4j/commit/b9f09d9dd221d9e9e86f1729a909a497e01c8a70))
+     > work on #223
+
+ -  update readme ([e2dc1a2e83b1093](https://github.com/bsorrentino/langgraph4j/commit/e2dc1a2e83b1093e58b9115b2d96544a6ba04005))
+
+ -  update changelog ([0a04cbfb1d00b4f](https://github.com/bsorrentino/langgraph4j/commit/0a04cbfb1d00b4f4d8d6cf519d76cc49812f91d3))
+
+
+
+### ALM 
+
+ -  bump to release 1.7.0 ([a7d3aa8b7c37d4c](https://github.com/bsorrentino/langgraph4j/commit/a7d3aa8b7c37d4c5639ee345371c1f5e6b1c3770))
+   
+ -  **oracle-saver**  bump to dev version 1.7-SNAPSHOT ([c5f5a9b9a524d62](https://github.com/bsorrentino/langgraph4j/commit/c5f5a9b9a524d62bbe819172c2d8b22c5c83cffd))
+   
+ -  **postgres-saver**  bump testcontainers.version to 1.21.3 ([02769fd29545846](https://github.com/bsorrentino/langgraph4j/commit/02769fd295458466ad3e8dd30ae6e2cc85156a5a))
+   
+ -  **oracle-saver**  bump testcontainers.version to 1.21.3 ([e9af21819ec17f8](https://github.com/bsorrentino/langgraph4j/commit/e9af21819ec17f8cd3565e895dea31402cb9bef6))
+   
+ -  bump to dev version 1.7-SNAPSHOT ([d9d427a6c115ab9](https://github.com/bsorrentino/langgraph4j/commit/d9d427a6c115ab96fd98595091ea9d3c77f5e655))
+   
+
+### Test 
+
+ -  **postgres-saver**  add usage of PostgreSQLContainer ([c1a0ea558b24d84](https://github.com/bsorrentino/langgraph4j/commit/c1a0ea558b24d84ae36137d88a96ce360767e57c))
+   
+ -  **oracle-saver**  add @BeforeAll and @AfterAll in test lifecycle ([b16c3246f88deaf](https://github.com/bsorrentino/langgraph4j/commit/b16c3246f88deaf15c7a066bf8f9e0e5be561775))
+    > work on #223
+
+ -  add unit for reproducing and fix issue ([2dc0383f41fd172](https://github.com/bsorrentino/langgraph4j/commit/2dc0383f41fd17205bc1b5222a8fa41446ccafd6))
+    > solve #260
+
+
+
+
+
+
 <!-- "name: v1.7.0-beta3" is a release tag -->
 
 ## [v1.7.0-beta3](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta3) (2025-10-14)
