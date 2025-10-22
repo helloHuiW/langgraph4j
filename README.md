@@ -440,6 +440,8 @@ We hope this guide helps you get started with LangGraph4j. Happy building!
 # References
 
 ## Articles
+
+* [LangGraph4j Deep Agents (Agent 2.0)](https://bsorrentino.github.io/bsorrentino/ai/2025/10/17/langgraph4j-deepagents.html)
 * [LangGraph4j Meets AG-UI - Building UI/UX in AI Agents era](https://bsorrentino.github.io/bsorrentino/ai/2025/08/21/LangGraph4j-meets-AG-UI.html)
 * [LangGraph4j - Implementing Human-in-the-Loop at ease](https://bsorrentino.github.io/bsorrentino/ai/2025/07/13/LangGraph4j-Agent-with-approval.html)
 * [LangGraph4j - Multi-Agent handoff implementation with Spring AI](https://bsorrentino.github.io/bsorrentino/ai/2025/05/10/Langgraph4j-agent-handoff.html)
