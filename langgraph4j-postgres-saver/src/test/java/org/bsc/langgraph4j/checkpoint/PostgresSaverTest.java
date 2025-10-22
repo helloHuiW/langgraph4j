@@ -6,8 +6,11 @@ import org.bsc.langgraph4j.StateGraph;
 import org.bsc.langgraph4j.action.NodeAction;
 import org.bsc.langgraph4j.serializer.std.ObjectStreamStateSerializer;
 import org.bsc.langgraph4j.state.AgentState;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -20,23 +23,48 @@ import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PostgresSaverITest {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PostgresSaverITest.class);
+public class PostgresSaverTest {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PostgresSaverTest.class);
+
+    private static String DATABASE_NAME = "lg4j-store";
+
+    private static String[] IMAGES = {
+            "postgres:16-alpine",
+            "pgvector/pgvector:pg16"
+    };
+
+    static PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>(IMAGES[1])
+                            .withDatabaseName(DATABASE_NAME);
 
     @BeforeAll
-    public static void initLogging() throws IOException {
-        try( var is = PostgresSaverITest.class.getResourceAsStream("/logging.properties") ) {
+    public static void init() throws IOException {
+        // initialize log
+        try( var is = PostgresSaverTest.class.getResourceAsStream("/logging.properties") ) {
             if( is!=null ) LogManager.getLogManager().readConfiguration(is);
         }
+
+        // start postgres container
+        postgres.start();
+
+    }
+
+    @AfterAll
+    public static void shutdown() {
+        postgres.stop();
     }
 
     PostgresSaver.Builder buildPostgresSaver() throws SQLException {
         return PostgresSaver.builder()
-                .host("localhost")
-                .port(5432)
-                .user("admin")
-                .password("bsorrentino")
-                .database("lg4j-store")
+                //.host("localhost")
+                .host(postgres.getHost())
+                //.port(5432)
+                .port(postgres.getFirstMappedPort())
+                //.user("admin")
+                .user(postgres.getUsername())
+                //.password("bsorrentino")
+                .password(postgres.getPassword())
+                .database(DATABASE_NAME)
                 .stateSerializer(new ObjectStreamStateSerializer<>( AgentState::new ) )
                 ;
     }
