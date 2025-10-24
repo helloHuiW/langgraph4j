@@ -2,6 +2,42 @@
 
 
 
+<!-- "name: v1.7.1" is a release tag -->
+
+## [v1.7.1](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.1) (2025-10-24)
+
+### Features
+
+ *  **langgraph4j-mysql-saver**  添加MySQL保存模块及相应测试 ([9b75c861c00d5c7](https://github.com/bsorrentino/langgraph4j/commit/9b75c861c00d5c702de24d8788fc56ab08a4920d))
+     > 添加了新的子模块 &#x60;langgraph4j-mysql-saver&#x60;，包括主要类 &#x60;MysqlSaver&#x60; 和其对应的测试类 &#x60;MysqlSaverTest&#x60;，以及相关配置文件和文档。
+     > Co-developed-by: Aone Copilot &lt;noreply@alibaba-inc.com&gt;
+   
+
+
+### Documentation
+
+ -  bump to release 1.7.1 ([3d1c12081fe4cc4](https://github.com/bsorrentino/langgraph4j/commit/3d1c12081fe4cc4700c4d74a367d25e135e38949))
+
+ -  update proj structure ([e39a6e75b108394](https://github.com/bsorrentino/langgraph4j/commit/e39a6e75b108394761e2a7914393fd2912262230))
+
+ -  update changelog ([03d9ff79c8f8ac4](https://github.com/bsorrentino/langgraph4j/commit/03d9ff79c8f8ac499fde49f8bccaa85145a7ebc8))
+
+
+
+### ALM 
+
+ -  bump to release 1.7.1 ([61eca36f42e4c39](https://github.com/bsorrentino/langgraph4j/commit/61eca36f42e4c394f9dad13dccb772bbe3115a2e))
+   
+ -  bump to next dev version 1.7-SNAPSHOT ([15a71c7407bfad0](https://github.com/bsorrentino/langgraph4j/commit/15a71c7407bfad09a877c146f1e7cb1bbe646a59))
+   
+ -  bump to next dev version 1.7-SNAPSHOT ([595e2daa05638ba](https://github.com/bsorrentino/langgraph4j/commit/595e2daa05638ba79fe051fb495a18417b142a80))
+   
+
+
+
+
+
+
 <!-- "name: v1.7.0" is a release tag -->
 
 ## [v1.7.0](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0) (2025-10-22)
