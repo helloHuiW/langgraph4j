@@ -13,7 +13,7 @@ LangGraph for Java. A library for building stateful, multi-agents applications w
 
 | Date         | Release        | info
 |--------------|----------------| ---
-| Oct 22, 2025 | `1.7.0` | pre release
+| Oct 24, 2025 | `1.7.1` | pre release
 
 ‼️ **Note:**
 > The miminum supported version is the `Java 17` 
@@ -99,6 +99,7 @@ You'll typically use a `CheckpointSaver` implementation (e.g., `MemorySaver` for
 langgraph4j/
 ├── langgraph4j-bom/                     # LangGraph4j dependency management
 ├── langgraph4j-core/                    # LangGraph4j core components
+├── langgraph4j-mysql-saver              # LangGraph4j persistent checkpoint saver based on MySQL
 ├── langgraph4j-oracle-saver             # LangGraph4j persistent checkpoint saver based on OracleDB
 ├── langgraph4j-postgres-saver           # LangGraph4j persistent checkpoint saver based on PostgresSQL
 ├── langchain4j/                         # LangChain4j integration
@@ -126,7 +127,7 @@ Make sure you are using Java 17 or later.
 **Latest Stable Version (Recommended):**
 ```xml
 <properties>
-    <langgraph4j.version>1.7.0</langgraph4j.version> <!-- Check for the actual latest version -->
+    <langgraph4j.version>1.7.1</langgraph4j.version> <!-- Check for the actual latest version -->
 </properties>
 
 <!-- Optional: Add the Bill of Materials (BOM) to manage langgraph4j module versions -->
