@@ -13,7 +13,7 @@ LangGraph for Java. A library for building stateful, multi-agents applications w
 
 | Date         | Release        | info
 |--------------|----------------| ---
-| Oct 24, 2025 | `1.7.1` | pre release
+| Oct 24, 2025 | `1.7.1` | last release
 
 ‼️ **Note:**
 > The miminum supported version is the `Java 17` 
