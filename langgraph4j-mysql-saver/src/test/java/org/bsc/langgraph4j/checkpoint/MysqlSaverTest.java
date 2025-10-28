@@ -1,17 +1,16 @@
 package org.bsc.langgraph4j.checkpoint;
 
-import oracle.jdbc.OracleConnection;
-import oracle.jdbc.datasource.OracleDataSource;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import org.bsc.langgraph4j.CompileConfig;
 import org.bsc.langgraph4j.RunnableConfig;
 import org.bsc.langgraph4j.StateGraph;
 import org.bsc.langgraph4j.action.NodeAction;
 import org.bsc.langgraph4j.state.AgentState;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.oracle.OracleContainer;
+import org.testcontainers.containers.MySQLContainer;
 
-import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Map;
 
 import static org.bsc.langgraph4j.StateGraph.END;
@@ -19,73 +18,57 @@ import static org.bsc.langgraph4j.StateGraph.START;
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.oracle.OracleContainer;
+public class MysqlSaverTest {
 
-public class OracleSaverTest {
+    protected static final String MYSQL_IMAGE_NAME = "mysql:8.0";
+    protected static MysqlDataSource DATA_SOURCE;
 
-    protected static final String ORACLE_IMAGE_NAME = "gvenzl/oracle-free:23.7-slim-faststart";
-    protected static OracleDataSource DATA_SOURCE;
-    protected static OracleDataSource SYSDBA_DATA_SOURCE;
-
-    protected static OracleContainer oracleContainer;
+    protected static MySQLContainer<?> mysqlContainer;
 
     @BeforeAll
-    public static void setup() throws IOException {
+    public static void setup() {
         try {
-            DATA_SOURCE = new oracle.jdbc.datasource.impl.OracleDataSource();
-            SYSDBA_DATA_SOURCE = new oracle.jdbc.datasource.impl.OracleDataSource();
-            String urlFromEnv = System.getenv("ORACLE_JDBC_URL");
+            DATA_SOURCE = new MysqlDataSource();
+            String urlFromEnv = System.getenv("MYSQL_JDBC_URL");
 
             if (urlFromEnv == null) {
-                // The Ryuk component is relied upon to stop this container.
-                oracleContainer = new OracleContainer(ORACLE_IMAGE_NAME)
-                        .withStartupTimeout(Duration.ofSeconds(600))
-                        .withConnectTimeoutSeconds(600)
-                        .withDatabaseName("pdb1")
+                @SuppressWarnings("resource")
+                MySQLContainer<?> container = new MySQLContainer<>(MYSQL_IMAGE_NAME)
+                        .withDatabaseName("testdb")
                         .withUsername("testuser")
                         .withPassword("testpwd");
-                oracleContainer.start();
+                container.start();
+                mysqlContainer = container;
 
                 initDataSource(
                         DATA_SOURCE,
-                        oracleContainer.getJdbcUrl(),
-                        oracleContainer.getUsername(),
-                        oracleContainer.getPassword());
-                initDataSource(SYSDBA_DATA_SOURCE, oracleContainer.getJdbcUrl(), "sys", oracleContainer.getPassword());
+                        mysqlContainer.getJdbcUrl(),
+                        mysqlContainer.getUsername(),
+                        mysqlContainer.getPassword());
 
             } else {
                 initDataSource(
                         DATA_SOURCE,
                         urlFromEnv,
-                        System.getenv("ORACLE_JDBC_USER"),
-                        System.getenv("ORACLE_JDBC_PASSWORD"));
-                initDataSource(
-                        SYSDBA_DATA_SOURCE,
-                        urlFromEnv,
-                        System.getenv("ORACLE_JDBC_USER"),
-                        System.getenv("ORACLE_JDBC_PASSWORD"));
+                        System.getenv("MYSQL_JDBC_USER"),
+                        System.getenv("MYSQL_JDBC_PASSWORD"));
             }
-            SYSDBA_DATA_SOURCE.setConnectionProperty(OracleConnection.CONNECTION_PROPERTY_INTERNAL_LOGON, "SYSDBA");
 
-        } catch (SQLException sqlException) {
-            throw new AssertionError(sqlException);
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
         }
 
     }
 
     @AfterAll
     public static void tearDown() {
-        if (oracleContainer != null) {
-            oracleContainer.close();
+        if (mysqlContainer != null) {
+            mysqlContainer.close();
         }
     }
 
-    static void initDataSource(OracleDataSource dataSource, String url, String username, String password)
-            throws SQLException {
-        dataSource.setURL(url + "?oracle.jdbc.provider.json=jackson-json-provider");
+    static void initDataSource(MysqlDataSource dataSource, String url, String username, String password) {
+        dataSource.setURL(url);
         dataSource.setUser(username);
         dataSource.setPassword(password);
     }
@@ -93,7 +76,7 @@ public class OracleSaverTest {
     @Test
     public void testCheckpointWithReleasedThread() throws Exception {
 
-        var saver = OracleSaver.builder()
+        var saver = MysqlSaver.builder()
                 .dataSource(DATA_SOURCE)
                 .build();
 
@@ -129,7 +112,7 @@ public class OracleSaverTest {
 
     @Test
     public void testCheckpointWithNotReleasedThread() throws Exception {
-        var saver = OracleSaver.builder()
+        var saver = MysqlSaver.builder()
                 .createOption(CreateOption.CREATE_OR_REPLACE)
                 .dataSource(DATA_SOURCE)
                 .build();
@@ -179,7 +162,7 @@ public class OracleSaverTest {
         assertEquals(END, lastSnapshot.get().next());
 
         // test checkpoints reloading from database
-        saver = OracleSaver.builder()
+        saver = MysqlSaver.builder()
                 .dataSource(DATA_SOURCE)
                 .build();
 
@@ -197,6 +180,7 @@ public class OracleSaverTest {
         assertEquals(2, history.size());
 
         lastSnapshot = workflow.stateOf(updatedConfig);
+        // lastSnapshot = workflow.lastStateOf( runnableConfig );
 
         assertTrue(lastSnapshot.isPresent());
         assertEquals("agent_1", lastSnapshot.get().node());

@@ -13,12 +13,14 @@ LangGraph for Java. A library for building stateful, multi-agents applications w
 
 | Date         | Release        | info
 |--------------|----------------| ---
-| Oct 14, 2025 | `1.7.0-beta3` | pre release
+| Oct 24, 2025 | `1.7.1` | last release
 
 ‼️ **Note:**
 > The miminum supported version is the `Java 17` 
 
-----
+## Star History
+
+[![Star History Chart](https://starchart.cc/langgraph4j/langgraph4j.svg)](https://starchart.cc/langgraph4j/langgraph4j)
 
 # Getting Started
 
@@ -97,6 +99,8 @@ You'll typically use a `CheckpointSaver` implementation (e.g., `MemorySaver` for
 langgraph4j/
 ├── langgraph4j-bom/                     # LangGraph4j dependency management
 ├── langgraph4j-core/                    # LangGraph4j core components
+├── langgraph4j-mysql-saver              # LangGraph4j persistent checkpoint saver based on MySQL
+├── langgraph4j-oracle-saver             # LangGraph4j persistent checkpoint saver based on OracleDB
 ├── langgraph4j-postgres-saver           # LangGraph4j persistent checkpoint saver based on PostgresSQL
 ├── langchain4j/                         # LangChain4j integration
 │   ├── langchain4j-core/                # LangChain4j core components (integration required)
@@ -123,7 +127,7 @@ Make sure you are using Java 17 or later.
 **Latest Stable Version (Recommended):**
 ```xml
 <properties>
-    <langgraph4j.version>1.7.0-beta3</langgraph4j.version> <!-- Check for the actual latest version -->
+    <langgraph4j.version>1.7.1</langgraph4j.version> <!-- Check for the actual latest version -->
 </properties>
 
 <!-- Optional: Add the Bill of Materials (BOM) to manage langgraph4j module versions -->
@@ -434,13 +438,11 @@ Now that you have a basic understanding of LangGraph4j, here's how you can conti
 
 We hope this guide helps you get started with LangGraph4j. Happy building!
 
-## Star History
-
-[![Star History Chart](https://starchart.cc/langgraph4j/langgraph4j.svg)](https://starchart.cc/langgraph4j/langgraph4j)
-
 # References
 
 ## Articles
+
+* [LangGraph4j Deep Agents (Agent 2.0)](https://bsorrentino.github.io/bsorrentino/ai/2025/10/17/langgraph4j-deepagents.html)
 * [LangGraph4j Meets AG-UI - Building UI/UX in AI Agents era](https://bsorrentino.github.io/bsorrentino/ai/2025/08/21/LangGraph4j-meets-AG-UI.html)
 * [LangGraph4j - Implementing Human-in-the-Loop at ease](https://bsorrentino.github.io/bsorrentino/ai/2025/07/13/LangGraph4j-Agent-with-approval.html)
 * [LangGraph4j - Multi-Agent handoff implementation with Spring AI](https://bsorrentino.github.io/bsorrentino/ai/2025/05/10/Langgraph4j-agent-handoff.html)

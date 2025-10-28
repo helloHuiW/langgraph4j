@@ -2,6 +2,94 @@
 
 
 
+<!-- "name: v1.7.1" is a release tag -->
+
+## [v1.7.1](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.1) (2025-10-24)
+
+### Features
+
+ *  **langgraph4j-mysql-saver**  添加MySQL保存模块及相应测试 ([9b75c861c00d5c7](https://github.com/bsorrentino/langgraph4j/commit/9b75c861c00d5c702de24d8788fc56ab08a4920d))
+     > 添加了新的子模块 &#x60;langgraph4j-mysql-saver&#x60;，包括主要类 &#x60;MysqlSaver&#x60; 和其对应的测试类 &#x60;MysqlSaverTest&#x60;，以及相关配置文件和文档。
+     > Co-developed-by: Aone Copilot &lt;noreply@alibaba-inc.com&gt;
+   
+
+
+### Documentation
+
+ -  bump to release 1.7.1 ([3d1c12081fe4cc4](https://github.com/bsorrentino/langgraph4j/commit/3d1c12081fe4cc4700c4d74a367d25e135e38949))
+
+ -  update proj structure ([e39a6e75b108394](https://github.com/bsorrentino/langgraph4j/commit/e39a6e75b108394761e2a7914393fd2912262230))
+
+ -  update changelog ([03d9ff79c8f8ac4](https://github.com/bsorrentino/langgraph4j/commit/03d9ff79c8f8ac499fde49f8bccaa85145a7ebc8))
+
+
+
+### ALM 
+
+ -  bump to release 1.7.1 ([61eca36f42e4c39](https://github.com/bsorrentino/langgraph4j/commit/61eca36f42e4c394f9dad13dccb772bbe3115a2e))
+   
+ -  bump to next dev version 1.7-SNAPSHOT ([15a71c7407bfad0](https://github.com/bsorrentino/langgraph4j/commit/15a71c7407bfad09a877c146f1e7cb1bbe646a59))
+   
+ -  bump to next dev version 1.7-SNAPSHOT ([595e2daa05638ba](https://github.com/bsorrentino/langgraph4j/commit/595e2daa05638ba79fe051fb495a18417b142a80))
+   
+
+
+
+
+
+
+<!-- "name: v1.7.0" is a release tag -->
+
+## [v1.7.0](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0) (2025-10-22)
+
+
+
+### Documentation
+
+ -  bump to release 1.7.0 ([0d9ee2b52b058d0](https://github.com/bsorrentino/langgraph4j/commit/0d9ee2b52b058d0cdcb8b55f9d60186af460c2c7))
+
+ -  add new article about deep agents ([05ad4209fdf013d](https://github.com/bsorrentino/langgraph4j/commit/05ad4209fdf013d1d331094f00ad3fe6a1783479))
+
+ -  update site documentation ([85c4d07bae7039d](https://github.com/bsorrentino/langgraph4j/commit/85c4d07bae7039d946fd7c8cf1decc27a63d6522))
+     > - refine integrations documents
+
+ -  add  langgraph4j-oracle-saver in project structure ([b9f09d9dd221d9e](https://github.com/bsorrentino/langgraph4j/commit/b9f09d9dd221d9e9e86f1729a909a497e01c8a70))
+     > work on #223
+
+ -  update readme ([e2dc1a2e83b1093](https://github.com/bsorrentino/langgraph4j/commit/e2dc1a2e83b1093e58b9115b2d96544a6ba04005))
+
+ -  update changelog ([0a04cbfb1d00b4f](https://github.com/bsorrentino/langgraph4j/commit/0a04cbfb1d00b4f4d8d6cf519d76cc49812f91d3))
+
+
+
+### ALM 
+
+ -  bump to release 1.7.0 ([a7d3aa8b7c37d4c](https://github.com/bsorrentino/langgraph4j/commit/a7d3aa8b7c37d4c5639ee345371c1f5e6b1c3770))
+   
+ -  **oracle-saver**  bump to dev version 1.7-SNAPSHOT ([c5f5a9b9a524d62](https://github.com/bsorrentino/langgraph4j/commit/c5f5a9b9a524d62bbe819172c2d8b22c5c83cffd))
+   
+ -  **postgres-saver**  bump testcontainers.version to 1.21.3 ([02769fd29545846](https://github.com/bsorrentino/langgraph4j/commit/02769fd295458466ad3e8dd30ae6e2cc85156a5a))
+   
+ -  **oracle-saver**  bump testcontainers.version to 1.21.3 ([e9af21819ec17f8](https://github.com/bsorrentino/langgraph4j/commit/e9af21819ec17f8cd3565e895dea31402cb9bef6))
+   
+ -  bump to dev version 1.7-SNAPSHOT ([d9d427a6c115ab9](https://github.com/bsorrentino/langgraph4j/commit/d9d427a6c115ab96fd98595091ea9d3c77f5e655))
+   
+
+### Test 
+
+ -  **postgres-saver**  add usage of PostgreSQLContainer ([c1a0ea558b24d84](https://github.com/bsorrentino/langgraph4j/commit/c1a0ea558b24d84ae36137d88a96ce360767e57c))
+   
+ -  **oracle-saver**  add @BeforeAll and @AfterAll in test lifecycle ([b16c3246f88deaf](https://github.com/bsorrentino/langgraph4j/commit/b16c3246f88deaf15c7a066bf8f9e0e5be561775))
+    > work on #223
+
+ -  add unit for reproducing and fix issue ([2dc0383f41fd172](https://github.com/bsorrentino/langgraph4j/commit/2dc0383f41fd17205bc1b5222a8fa41446ccafd6))
+    > solve #260
+
+
+
+
+
+
 <!-- "name: v1.7.0-beta3" is a release tag -->
 
 ## [v1.7.0-beta3](https://github.com/bsorrentino/langgraph4j/releases/tag/v1.7.0-beta3) (2025-10-14)
