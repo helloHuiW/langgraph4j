@@ -7,13 +7,13 @@
 The `langgraph4j-oracle-saver` module makes possible to store workflow states in the Oracle Database. Workflow progress is preserved and may be restarted or examined at any time, making your LLM-based apps stateful across executions.
 
 Key features include:
-- **Oracle Database persistence:** All workflow states are stored in the Oracle database, surviving process restarts or system failures.
+- **Oracle Database persistence:** All workflow states are stored in the Oracle Database, surviving process restarts or system failures.
 - **Schema provisioning:** Built-in services to easily create the required database schema for storing workflow states.
 
 ## Features
 
 - **Durable State:** Persist the state of your LangGraph4j workflow.
-- **Easy Schema Initialization:** To build the necessary tables and indexes in your Oracle database.
+- **Easy Schema Initialization:** To build the necessary tables and indexes in your Oracle Database.
 - **Seamless Integration:** Works out of the box with LangGraph4j.
 
 ## Requirements
@@ -38,7 +38,7 @@ Add the following to your project's build configuration:
 
 **Gradle**
 ```gradle
-implementation 'org.bsc.langgraph4j:langgraph4j-oracle-saver:1.7.0-beta3'
+implementation 'org.bsc.langgraph4j:langgraph4j-oracle-saver:1.7.0'
 ```
 
 ### Initialize the OracleSaver
@@ -80,7 +80,7 @@ public class DemoLangGraph4j {
 
     public static void main(String[] args) throws Exception {
 
-        // Configure Oracle database connection using JDBC thin driver and the Jackson JSON provider (OJDBC Extensions)
+        // Configure Oracle Database connection using JDBC thin driver and the Jackson JSON provider (OJDBC Extensions)
         OracleDataSource dataSource = new OracleDataSource();
         dataSource.setURL("jdbc:oracle:thin:@localhost:1521/FREEPDB1?oracle.jdbc.provider.json=jackson-json-provider");
         dataSource.setUser("scott");
@@ -88,7 +88,7 @@ public class DemoLangGraph4j {
 
         // Initialize OracleSaver for persistent state management
         // CREATE_OR_REPLACE option ensures the checkpoint table is recreated if it exists
-        // WITH SAVER: State is persisted to Oracle Database, enabling resume capability and history tracking
+        // WITH SAVER: State is persisted in the Oracle Database, enabling resume capability and history tracking
         // WITHOUT SAVER: State exists only in memory and is lost when the application terminates
         OracleSaver saver = OracleSaver.builder()
                 .createOption(CreateOption.CREATE_OR_REPLACE)
@@ -109,12 +109,10 @@ public class DemoLangGraph4j {
                 .addEdge("agent_1", END);                  // Connect agent_1 to end
 
         // Configures compilation with checkpoint persistence enabled
-        // releaseThread(false) keeps the thread alive for synchronous execution
         // WITH SAVER: Workflow state is checkpointed at each node, enabling history and resume
         // WITHOUT SAVER: Workflow executes in memory only with no persistence
         CompileConfig compileConfig = CompileConfig.builder()
                 .checkpointSaver(saver)
-                .releaseThread(false)
                 .build();
 
         // Creates runtime configuration for workflow execution
